@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace Api_Insi_Web.Models;
 
@@ -18,6 +19,6 @@ public partial class Matricula
     public string ?GradoSolicitado { get; set; } = null!;
 
     public virtual Estudiante ?oEstudiante { get; set; } = null!;
-
+    [JsonIgnore]
     public virtual Tutores ?oTutor { get; set; } = null!;
 }

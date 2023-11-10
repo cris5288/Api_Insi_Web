@@ -28,8 +28,8 @@ namespace Api_Insi_Web.Controllers
                 try
                 {
 
-                    lista = _dbcontext.Matriculas.Include(t => t.oTutor).ToList();
-                    lista = _dbcontext.Matriculas.Include(e => e.oEstudiante).ToList();
+                    lista = _dbcontext.Matriculas./*Include(t => t.oTutor).*/ToList();
+                    lista = _dbcontext.Matriculas./*Include(e => e.oEstudiante).*/ToList();
 
                     return StatusCode(StatusCodes.Status200OK, new { mensaje = "Lista de Matricula de estudiantes", response = lista });
 
@@ -88,8 +88,7 @@ namespace Api_Insi_Web.Controllers
         [HttpGet("porGrado/{gradoSolicitado}")]
         public ActionResult<List<Matricula>> ObtenerPorGradoSolicitado(string gradoSolicitado)
         {
-            var matriculas = _dbcontext.Matriculas
-                                                  .Include(e => e.oEstudiante)
+            var matriculas = _dbcontext.Matriculas.Include(e => e.oEstudiante)
                                                   .Where(m => m.GradoSolicitado == gradoSolicitado)
                                                   .ToList();
 
@@ -110,10 +109,27 @@ namespace Api_Insi_Web.Controllers
         {
             try
             {
-                _dbcontext.Matriculas.Add(objeto);
-                _dbcontext.SaveChanges();
+                if (ModelState.IsValid)
+                {
+                    // Lógica para asignar automáticamente un tutor
+                    Tutores tutor = _dbcontext.Tutores.OrderByDescending(t => t.IdTutor).FirstOrDefault();
+                    objeto.oTutor = tutor;
+                    Estudiante estudiante = _dbcontext.Estudiantes.OrderByDescending(e => e.IdEstudiante).FirstOrDefault();
+                    objeto.oEstudiante = estudiante;
 
-                return StatusCode(StatusCodes.Status200OK, new { mensaje = " Matricula del Estudiante Guardada Correctamente" });
+                    _dbcontext.Matriculas.Add(objeto);
+                    _dbcontext.SaveChanges();
+
+
+                    int idTutorRecienAgregado = objeto.oTutor.IdTutor;
+                    int idEstudianteRecienAgregado = objeto.oEstudiante.IdEstudiante;
+
+                    return Ok(new { mensaje = "Matricula del Estudiante Guardada Correctamente" });
+                }
+                else
+                {
+                    return BadRequest(new { mensaje = "Los datos no son válidos. Por favor, revise que los datos sean correctos." });
+                }
             }
             catch (Exception ex)
             {
@@ -157,40 +173,39 @@ namespace Api_Insi_Web.Controllers
                 }
             }
 
-            [HttpDelete]
-            [Route("Eliminar/{idMatricula:int}")]
-            public IActionResult Eliminar(int idMatricula)
+        [HttpDelete]
+        [Route("Eliminar/{idMatricula:int}")]
+        public IActionResult Eliminar(int idMatricula)
+        {
+            try
             {
-                Matricula oMatricula = _dbcontext.Matriculas.Find(idMatricula);
+                Matricula oMatricula = _dbcontext.Matriculas
+                    .Include(t => t.oTutor)
+                    .Include(e => e.oEstudiante)
+                    .FirstOrDefault(m => m.IdMatricula == idMatricula);
+
                 if (oMatricula == null)
                 {
-                    return BadRequest("Estudiante no encontrado");
+                    return NotFound("Matrícula no encontrada");
                 }
 
-                try
-                {
-                    oMatricula = _dbcontext.Matriculas
-                        .Include(t => t.oTutor)
-                        .Include(e => e.oEstudiante)
-                        .SingleOrDefault(m => m.IdMatricula == idMatricula);
+                _dbcontext.RemoveRange(oMatricula.oTutor, oMatricula.oEstudiante);
+                _dbcontext.Remove(oMatricula);
+                _dbcontext.SaveChanges();
 
-                    _dbcontext.RemoveRange(oMatricula.oTutor);
-                    _dbcontext.Remove(oMatricula.oEstudiante);
-                    _dbcontext.Remove(oMatricula);
-                    _dbcontext.SaveChanges();
-
-                    return StatusCode(StatusCodes.Status200OK, new { mensaje = "Matricula del Estudiante eliminada correctamente" });
-                }
-                catch (Exception ex)
-                {
-                    return StatusCode(StatusCodes.Status200OK, new { mensaje = ex.Message });
-                }
+                return StatusCode(StatusCodes.Status200OK, new { mensaje = "Matrícula del estudiante eliminada correctamente" });
             }
-
-
-
-
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
+            }
         }
+
+
+
+
+
     }
+}
 
 

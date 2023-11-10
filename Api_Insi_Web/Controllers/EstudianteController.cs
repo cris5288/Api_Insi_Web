@@ -1,6 +1,7 @@
 ﻿using Api_Insi_Web.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Api_Insi_Web.Controllers
 {
@@ -27,7 +28,7 @@ namespace Api_Insi_Web.Controllers
 
                 try
                 {
-                    lista = _dbcontext.Estudiantes.ToList();
+                lista = _dbcontext.Estudiantes./*Include(t => t.oTutor).*/ToList();
 
                     return StatusCode(StatusCodes.Status200OK, new { mensaje = "Lista de estudiantes", response = lista });
 
@@ -60,17 +61,46 @@ namespace Api_Insi_Web.Controllers
                 }
             }
 
+        //[HttpPost]
+        //[Route("Guardar")]
+        //public IActionResult Guardar([FromBody] Estudiante objeto)
+        //{
+        //    try
+        //    {
+        //        if (ModelState.IsValid) 
+        //        {
+        //            _dbcontext.Estudiantes.Add(objeto);
+        //            _dbcontext.SaveChanges();
+
+        //            int idTutorRecienAgregado = objeto.oTutor.IdTutor;
+
+        //            return Ok(new { mensaje = "Estudiante guardado correctamente" });
+        //        }
+        //        else
+        //        {
+        //            return BadRequest(new { mensaje = "Los datos no son válidos. Por favor, revise que los datos sean correctos." });
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = "Ocurrió un error al guardar el estudiante en la base de datos. Por favor, inténtelo nuevamente." });
+        //    }
+        //}
         [HttpPost]
         [Route("Guardar")]
         public IActionResult Guardar([FromBody] Estudiante objeto)
         {
             try
             {
-                if (ModelState.IsValid) 
+                if (ModelState.IsValid)
                 {
+                    // Lógica para asignar automáticamente un tutor
+                    Tutores tutor = _dbcontext.Tutores.OrderByDescending(t => t.IdTutor).FirstOrDefault();
+                    objeto.oTutor = tutor;
+
                     _dbcontext.Estudiantes.Add(objeto);
                     _dbcontext.SaveChanges();
-                   
+
                     int idTutorRecienAgregado = objeto.oTutor.IdTutor;
 
                     return Ok(new { mensaje = "Estudiante guardado correctamente" });
@@ -85,6 +115,7 @@ namespace Api_Insi_Web.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = "Ocurrió un error al guardar el estudiante en la base de datos. Por favor, inténtelo nuevamente." });
             }
         }
+
 
 
 

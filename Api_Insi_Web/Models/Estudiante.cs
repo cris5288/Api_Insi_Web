@@ -14,7 +14,7 @@ public partial class Estudiante
 
     public string? Apellido { get; set; } = null!;
 
-    public DateTime? FechaNacimiento { get; set; }
+    public DateTime? FechaNacimiento { get; set; } = null!;
 
     public string? LugarNacimiento { get; set; } = null!;
 
@@ -33,7 +33,7 @@ public partial class Estudiante
     public string? UltimoGradoAprobado { get; set; } = null!;
 
     public string ?EstaRepitiendoGrado { get; set; } = null!;
-    [JsonIgnore]
+   
     public virtual Tutores? oTutor { get; set; } 
     [JsonIgnore]
     public virtual ICollection<Matricula> Matriculas { get; set; } = new List<Matricula>();
