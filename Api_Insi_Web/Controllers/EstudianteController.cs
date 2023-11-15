@@ -10,7 +10,6 @@ namespace Api_Insi_Web.Controllers
     public class EstudianteController : ControllerBase
     {
        
-
             public readonly BdInsiContext _dbcontext;
 
             public EstudianteController(BdInsiContext _context)
@@ -18,27 +17,25 @@ namespace Api_Insi_Web.Controllers
                 _dbcontext = _context;
             }
 
+        [HttpGet]
+        [Route("Lista")]
+        public IActionResult Lista()
+        {
+            List<Estudiante> lista = new List<Estudiante>();
 
-            [HttpGet]
-            [Route("Lista")]
-
-            public IActionResult Lista()
+            try
             {
-                List<Estudiante> lista = new List<Estudiante>();
+                lista = _dbcontext.Estudiantes.ToList();
 
-                try
-                {
-                lista = _dbcontext.Estudiantes./*Include(t => t.oTutor).*/ToList();
-
-                    return StatusCode(StatusCodes.Status200OK, new { mensaje = "Lista de estudiantes", response = lista });
-
-                }
-                catch (Exception ex)
-                {
-                    return StatusCode(StatusCodes.Status200OK, new { mensaje = ex.Message, response = lista });
-                }
+                return Ok(new { mensaje = "Lista de estudiantes", response = lista });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message, response = lista });
 
             }
+
+        }
 
             [HttpGet]
             [Route("Obtener/{idEstudiante:int}")]
@@ -61,31 +58,6 @@ namespace Api_Insi_Web.Controllers
                 }
             }
 
-        //[HttpPost]
-        //[Route("Guardar")]
-        //public IActionResult Guardar([FromBody] Estudiante objeto)
-        //{
-        //    try
-        //    {
-        //        if (ModelState.IsValid) 
-        //        {
-        //            _dbcontext.Estudiantes.Add(objeto);
-        //            _dbcontext.SaveChanges();
-
-        //            int idTutorRecienAgregado = objeto.oTutor.IdTutor;
-
-        //            return Ok(new { mensaje = "Estudiante guardado correctamente" });
-        //        }
-        //        else
-        //        {
-        //            return BadRequest(new { mensaje = "Los datos no son válidos. Por favor, revise que los datos sean correctos." });
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = "Ocurrió un error al guardar el estudiante en la base de datos. Por favor, inténtelo nuevamente." });
-        //    }
-        //}
         [HttpPost]
         [Route("Guardar")]
         public IActionResult Guardar([FromBody] Estudiante objeto)
@@ -93,8 +65,7 @@ namespace Api_Insi_Web.Controllers
             try
             {
                 if (ModelState.IsValid)
-                {
-                    // Lógica para asignar automáticamente un tutor
+                {                  
                     Tutores tutor = _dbcontext.Tutores.OrderByDescending(t => t.IdTutor).FirstOrDefault();
                     objeto.oTutor = tutor;
 
@@ -133,8 +104,7 @@ namespace Api_Insi_Web.Controllers
                 }
                 try
                 {
-                   
-                    //oEstudiante.IdTutor = objeto2.IdTutor is null ? oEstudiante.IdTutor : objeto2.IdTutor;
+                                      
                     oEstudiante.Nombre = objeto2.Nombre is null ? oEstudiante.Nombre : objeto2.Nombre;
                     oEstudiante.Apellido = objeto2.Apellido is null ? oEstudiante.Apellido : objeto2.Apellido;
                     oEstudiante.FechaNacimiento = objeto2.FechaNacimiento is null ? oEstudiante.FechaNacimiento : objeto2.FechaNacimiento;
@@ -160,7 +130,6 @@ namespace Api_Insi_Web.Controllers
 
             }
 
-
             [HttpDelete]
             [Route("Eliminar/{idEstudiante:int}")]
             public IActionResult Eliminar(int idEstudiante)
@@ -180,7 +149,7 @@ namespace Api_Insi_Web.Controllers
                 }
                 catch (Exception ex)
                 {
-                    return StatusCode(StatusCodes.Status200OK, new { mensaje = ex.Message });
+                    return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
                 }
             }
 

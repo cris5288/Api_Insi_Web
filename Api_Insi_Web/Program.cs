@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Api_Insi_Web.Models;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc.Formatters.Xml;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,12 @@ builder.Services.AddControllers().AddJsonOptions(opt =>
 {
     opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
+
+builder.Services.AddControllers(opt =>
+{
+    opt.ReturnHttpNotAcceptable = true;
+}).AddXmlDataContractSerializerFormatters();
+
 
 var app = builder.Build();
 

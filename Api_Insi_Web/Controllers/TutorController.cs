@@ -18,7 +18,6 @@ namespace Api_Insi_Web.Controllers
 
         [HttpGet]
         [Route("Lista")]
-
         public IActionResult Lista()
         {
             List<Tutores> lista = new List<Tutores>();
@@ -27,12 +26,12 @@ namespace Api_Insi_Web.Controllers
             {
                 lista = _dbcontext.Tutores.ToList();
 
-                return StatusCode(StatusCodes.Status200OK, new { mensaje = "Lista de Tutores", response = lista });
+                return Ok(new { mensaje = "Lista de Tutores", response = lista });
 
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status200OK, new { mensaje = ex.Message, response = lista });
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message, response = lista });
             }
 
         }
@@ -67,7 +66,6 @@ namespace Api_Insi_Web.Controllers
                 {
                     return BadRequest("No se proporcionó ningún dato del tutor.");
                 }
-
                 if (!ModelState.IsValid)
                 {
                     return BadRequest(ModelState);
@@ -78,12 +76,10 @@ namespace Api_Insi_Web.Controllers
 
                 return CreatedAtAction(nameof(Guardar), new { id = objeto.IdTutor }, new { mensaje = "Tutor guardado correctamente." });
             }
+
             catch (Exception ex)
             {
-                // Log the exception
-                // logger.LogError(ex, "An error occurred while saving the tutor.");
-
-                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = "Se produjo un error al guardar el tutor." });
+               return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = "Se produjo un error al guardar el tutor." });
             }
         }
 
@@ -100,7 +96,6 @@ namespace Api_Insi_Web.Controllers
             }
             try
             {
-               
                 oTutores.Nombre = objeto3.Nombre is null ? oTutores.Nombre : objeto3.Nombre;
                 oTutores.Apellido = objeto3.Apellido is null ? oTutores.Apellido : objeto3.Apellido;
                 oTutores.Direccion = objeto3.Direccion is null ? oTutores.Direccion : objeto3.Direccion;
@@ -114,7 +109,7 @@ namespace Api_Insi_Web.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = "❌ Los datos no son válidos ¡Por favor revise que los datos sean correctos!" });
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message});
             }
 
         }
@@ -138,7 +133,7 @@ namespace Api_Insi_Web.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status200OK, new { mensaje = ex.Message });
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
             }
         }
     }

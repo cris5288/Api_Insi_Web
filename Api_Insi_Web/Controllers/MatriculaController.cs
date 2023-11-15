@@ -18,28 +18,25 @@ namespace Api_Insi_Web.Controllers
                 _dbcontext = _context;
             }
 
-            [HttpGet]
-            [Route("Lista")]
+        [HttpGet]
+        [Route("Lista")]
+        public IActionResult Lista()
+        {
+            List<Matricula> lista = new List<Matricula>();
 
-            public IActionResult Lista()
+            try
             {
-                List<Matricula> lista = new List<Matricula>();
+                lista = _dbcontext.Matriculas.ToList();
+                lista = _dbcontext.Matriculas.ToList();
 
-                try
-                {
-
-                    lista = _dbcontext.Matriculas./*Include(t => t.oTutor).*/ToList();
-                    lista = _dbcontext.Matriculas./*Include(e => e.oEstudiante).*/ToList();
-
-                    return StatusCode(StatusCodes.Status200OK, new { mensaje = "Lista de Matricula de estudiantes", response = lista });
-
-                }
-                catch (Exception ex)
-                {
-                    return StatusCode(StatusCodes.Status200OK, new { mensaje = ex.Message, response = lista });
-                }
-
+                return Ok(new { mensaje = "Lista de Matricula de estudiantes", response = lista });
             }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message, response = lista });
+            }
+
+        }
             [HttpGet]
             [Route("Obtener/{idMatricula:int}")]
             public IActionResult Obtener(int idMatricula)
@@ -53,13 +50,8 @@ namespace Api_Insi_Web.Controllers
 
                 try
                 {
-
-                    oMatricula = _dbcontext.Matriculas.Include(t => t.oTutor).Where(m => m.IdMatricula == idMatricula).FirstOrDefault();
-                    oMatricula = _dbcontext.Matriculas.Include(e => e.oEstudiante).Where(m => m.IdMatricula == idMatricula).FirstOrDefault();
-
-
-
-
+                    oMatricula = _dbcontext.Matriculas.Where(m => m.IdMatricula == idMatricula).FirstOrDefault();
+                   
                     return StatusCode(StatusCodes.Status200OK, new { mensaje = " Matricula de Estudiante encontrada", response = oMatricula });
                 }
                 catch (Exception ex)
@@ -69,39 +61,7 @@ namespace Api_Insi_Web.Controllers
             }
 
 
-        [HttpGet("porEstado/{estado}")]
-        public ActionResult<List<Matricula>> ObtenerPorEstado(string estado)
-        {
-            var matriculas = _dbcontext.Matriculas
-                                                  .Include(e => e.oEstudiante)
-                                                  .Where(m => m.EstadoMatricula == estado)
-                                                  .ToList();
-
-            if (matriculas.Count == 0)
-            {
-                return NotFound(new { mensaje = "No se encontraron matrículas con el estado especificado" });
-            }
-
-            return Ok(matriculas);
-        }
-
-        [HttpGet("porGrado/{gradoSolicitado}")]
-        public ActionResult<List<Matricula>> ObtenerPorGradoSolicitado(string gradoSolicitado)
-        {
-            var matriculas = _dbcontext.Matriculas.Include(e => e.oEstudiante)
-                                                  .Where(m => m.GradoSolicitado == gradoSolicitado)
-                                                  .ToList();
-
-            if (matriculas.Count == 0)
-            {
-                return NotFound(new { mensaje = "No se encontraron matrículas para el grado solicitado especificado" });
-            }
-
-            return Ok(matriculas);
-        }
-
-
-
+      
         [HttpPost]
         [Route("Guardar")]
 
@@ -200,10 +160,6 @@ namespace Api_Insi_Web.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
             }
         }
-
-
-
-
 
     }
 }
