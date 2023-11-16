@@ -20,26 +20,27 @@ namespace Api_Insi_Web.Controllers
 
         [HttpGet]
         [Route("Lista")]
-        public IActionResult Lista()
+        public ActionResult Lista()
         {
             List<Matricula> lista = new List<Matricula>();
 
             try
             {
-                lista = _dbcontext.Matriculas.ToList();
+                int totalMatriculas = _dbcontext.Matriculas.Count();
                 lista = _dbcontext.Matriculas.ToList();
 
-                return Ok(new { mensaje = "Lista de Matricula de estudiantes", response = lista });
+                return Ok(new { mensaje = "Total de matrículas", total = totalMatriculas, lista = lista });
             }
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message, response = lista });
             }
-
         }
-            [HttpGet]
+
+
+        [HttpGet]
             [Route("Obtener/{idMatricula:int}")]
-            public IActionResult Obtener(int idMatricula)
+            public ActionResult Obtener(int idMatricula)
             {
                 Matricula oMatricula = _dbcontext.Matriculas.Find(idMatricula);
 
@@ -61,48 +62,38 @@ namespace Api_Insi_Web.Controllers
             }
 
 
-      
+
         [HttpPost]
         [Route("Guardar")]
-
-        public IActionResult Guardar([FromBody] Matricula objeto)
+        public ActionResult Guardar([FromBody] Matricula objeto)
         {
             try
             {
-                if (ModelState.IsValid)
-                {
-                    // Lógica para asignar automáticamente un tutor
-                    Tutores tutor = _dbcontext.Tutores.OrderByDescending(t => t.IdTutor).FirstOrDefault();
-                    objeto.oTutor = tutor;
-                    Estudiante estudiante = _dbcontext.Estudiantes.OrderByDescending(e => e.IdEstudiante).FirstOrDefault();
-                    objeto.oEstudiante = estudiante;
+                // Lógica para asignar automáticamente un tutor
+                Tutores tutor = _dbcontext.Tutores.OrderByDescending(t => t.IdTutor).FirstOrDefault();
+                objeto.oTutor = tutor;
+                Estudiante estudiante = _dbcontext.Estudiantes.OrderByDescending(e => e.IdEstudiante).FirstOrDefault();
+                objeto.oEstudiante = estudiante;
 
-                    _dbcontext.Matriculas.Add(objeto);
-                    _dbcontext.SaveChanges();
+                _dbcontext.Matriculas.Add(objeto);
+                _dbcontext.SaveChanges();
 
+                int idTutorRecienAgregado = objeto.oTutor.IdTutor;
+                int idEstudianteRecienAgregado = objeto.oEstudiante.IdEstudiante;
 
-                    int idTutorRecienAgregado = objeto.oTutor.IdTutor;
-                    int idEstudianteRecienAgregado = objeto.oEstudiante.IdEstudiante;
-
-                    return Ok(new { mensaje = "Matricula del Estudiante Guardada Correctamente" });
-                }
-                else
-                {
-                    return BadRequest(new { mensaje = "Los datos no son válidos. Por favor, revise que los datos sean correctos." });
-                }
+                return Ok(new { mensaje = "Matricula del Estudiante Guardada Correctamente" });
             }
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
             }
-
         }
 
 
 
         [HttpPut]
             [Route("Editar")]
-            public IActionResult Editar([FromBody] Matricula objeto)
+            public ActionResult Editar([FromBody] Matricula objeto)
             {
                 Matricula oMatricula = _dbcontext.Matriculas.Find(objeto.IdMatricula);
 
@@ -135,7 +126,7 @@ namespace Api_Insi_Web.Controllers
 
         [HttpDelete]
         [Route("Eliminar/{idMatricula:int}")]
-        public IActionResult Eliminar(int idMatricula)
+        public ActionResult Eliminar(int idMatricula)
         {
             try
             {

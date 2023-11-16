@@ -20,10 +20,10 @@ builder.Services.AddControllers().AddJsonOptions(opt =>
     opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
 
-builder.Services.AddControllers(opt =>
-{
-    opt.ReturnHttpNotAcceptable = true;
-}).AddXmlDataContractSerializerFormatters();
+//builder.Services.AddControllers(opt =>
+//{
+//    opt.ReturnHttpNotAcceptable = true;
+//}).AddXmlDataContractSerializerFormatters();
 
 
 var app = builder.Build();

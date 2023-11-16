@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Numerics;
+using System;
 
 namespace Api_Insi_Web.Controllers
 {
@@ -19,67 +21,59 @@ namespace Api_Insi_Web.Controllers
 
         [HttpGet]
         [Route("Lista")]
-        public IActionResult Lista()
+        public ActionResult Lista()
         {
             List<Estudiante> lista = new List<Estudiante>();
 
             try
             {
+                int totalEstudiantes = _dbcontext.Estudiantes.Count();
                 lista = _dbcontext.Estudiantes.ToList();
 
-                return Ok(new { mensaje = "Lista de estudiantes", response = lista });
+                return Ok(new { mensaje = "Total de estudiantes", total = totalEstudiantes, lista = lista });
             }
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message, response = lista });
-
             }
-
         }
 
-            [HttpGet]
-            [Route("Obtener/{idEstudiante:int}")]
-            public IActionResult Obtener(int idEstudiante)
-            {
-                try
-                {
-                    Estudiante oEstudiante = _dbcontext.Estudiantes.Find(idEstudiante);
-
-                    if (oEstudiante == null)
-                    {
-                        return BadRequest("Estudiante no encontrado");
-                    }
-
-                    return StatusCode(StatusCodes.Status200OK, new { mensaje = "Estudiante encontrado", response = oEstudiante });
-                }
-                catch (Exception ex)
-                {
-                    return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
-                }
-            }
-
-        [HttpPost]
-        [Route("Guardar")]
-        public IActionResult Guardar([FromBody] Estudiante objeto)
+        [HttpGet]
+        [Route("Obtener/{idEstudiante:int}")]
+        public ActionResult Obtener(int idEstudiante)
         {
             try
             {
-                if (ModelState.IsValid)
-                {                  
-                    Tutores tutor = _dbcontext.Tutores.OrderByDescending(t => t.IdTutor).FirstOrDefault();
-                    objeto.oTutor = tutor;
+                Estudiante oEstudiante = _dbcontext.Estudiantes.Find(idEstudiante);
 
-                    _dbcontext.Estudiantes.Add(objeto);
-                    _dbcontext.SaveChanges();
-
-                    int idTutorRecienAgregado = objeto.oTutor.IdTutor;
-
-                    return Ok(new { mensaje = "Estudiante guardado correctamente" });
-                }
-                else
+                if (oEstudiante == null)
                 {
-                    return BadRequest(new { mensaje = "Los datos no son válidos. Por favor, revise que los datos sean correctos." });
+                    return BadRequest("Estudiante no encontrado");
                 }
+
+                return StatusCode(StatusCodes.Status200OK, new { mensaje = "Estudiante encontrado", response = oEstudiante });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
+            }
+        }  
+        
+        [HttpPost]
+        [Route("Guardar")]
+        public ActionResult Guardar([FromBody] Estudiante objeto)
+        {
+            try
+            {
+                Tutores tutor = _dbcontext.Tutores.OrderByDescending(t => t.IdTutor).FirstOrDefault();
+                objeto.oTutor = tutor;
+
+                _dbcontext.Estudiantes.Add(objeto);
+                _dbcontext.SaveChanges();
+
+                int idTutorRecienAgregado = objeto.oTutor.IdTutor;
+
+                return Ok(new { mensaje = "Estudiante guardado correctamente" });
             }
             catch (Exception ex)
             {
@@ -91,9 +85,10 @@ namespace Api_Insi_Web.Controllers
 
 
 
+
         [HttpPut]
             [Route("Editar")]
-            public IActionResult Editar([FromBody] Estudiante objeto2)
+            public ActionResult Editar([FromBody] Estudiante objeto2)
             {
 
                 Estudiante oEstudiante = _dbcontext.Estudiantes.Find(objeto2.IdEstudiante);
@@ -132,7 +127,7 @@ namespace Api_Insi_Web.Controllers
 
             [HttpDelete]
             [Route("Eliminar/{idEstudiante:int}")]
-            public IActionResult Eliminar(int idEstudiante)
+            public ActionResult Eliminar(int idEstudiante)
             {
                 Estudiante oEstudiante = _dbcontext.Estudiantes.Find(idEstudiante);
                 if (oEstudiante == null)

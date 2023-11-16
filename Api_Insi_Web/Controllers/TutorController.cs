@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Api_Insi_Web.Models;
+using AutoMapper;
 
 namespace Api_Insi_Web.Controllers
 {
@@ -18,27 +19,27 @@ namespace Api_Insi_Web.Controllers
 
         [HttpGet]
         [Route("Lista")]
-        public IActionResult Lista()
+        public ActionResult Lista()
         {
             List<Tutores> lista = new List<Tutores>();
 
             try
             {
+                int totalTutores = _dbcontext.Tutores.Count();
                 lista = _dbcontext.Tutores.ToList();
 
-                return Ok(new { mensaje = "Lista de Tutores", response = lista });
-
+                return Ok(new { mensaje = "Total de tutores", total = totalTutores, lista = lista });
             }
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message, response = lista });
             }
-
         }
+
 
         [HttpGet]
         [Route("Obtener/{idTutores:int}")]
-        public IActionResult Obtener(int idTutores)
+        public ActionResult Obtener(int idTutores)
         {
             try
             {
@@ -58,17 +59,13 @@ namespace Api_Insi_Web.Controllers
         }
         [HttpPost]
         [Route("Guardar")]
-        public IActionResult Guardar([FromBody] Tutores objeto)
+        public ActionResult Guardar([FromBody]Tutores objeto)
         {
             try
             {
                 if (objeto == null)
                 {
                     return BadRequest("No se proporcionó ningún dato del tutor.");
-                }
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
                 }
 
                 _dbcontext.Tutores.Add(objeto);
@@ -79,13 +76,14 @@ namespace Api_Insi_Web.Controllers
 
             catch (Exception ex)
             {
-               return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = "Se produjo un error al guardar el tutor." });
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = "Se produjo un error al guardar el tutor." });
             }
         }
 
+
         [HttpPut]
         [Route("Editar")]
-        public IActionResult Editar([FromBody] Tutores objeto3)
+        public ActionResult Editar([FromBody] Tutores objeto3)
         {
 
             Tutores oTutores = _dbcontext.Tutores.Find(objeto3.IdTutor);
@@ -116,7 +114,7 @@ namespace Api_Insi_Web.Controllers
 
         [HttpDelete]
         [Route("Eliminar/{idTutores:int}")]
-        public IActionResult Eliminar(int idTutores)
+        public ActionResult Eliminar(int idTutores)
         {
             Tutores oTutores = _dbcontext.Tutores.Find(idTutores);
             if (oTutores == null)

@@ -9,19 +9,15 @@ public partial class Tutores
 {
     public int IdTutor { get; set; }
 
-    [Required(ErrorMessage = "El campo 'Nombre' es obligatorio.")]
-    public string Nombre { get; set; } = null!;
+   public string? Nombre { get; set; } = null!;
 
-    [Required(ErrorMessage = "El campo 'Apellido' es obligatorio.")]
-    public string Apellido { get; set; } = null!;
+    public string? Apellido { get; set; } = null!;
 
-    public string Direccion { get; set; } = null!;
+    public string? Direccion { get; set; } = null!;
 
-    [RegularExpression(@"^\d{8}$", ErrorMessage = "El campo 'Telefono' debe ser un número de 8 dígitos.")]
-    public string Telefono { get; set; } = null!;
+    public string ?Telefono { get; set; } = null!;
 
-    [Required(ErrorMessage = "El campo 'RelacionConEstudiante' es obligatorio.")]
-    public string RelacionConEstudiante { get; set; } = null!;
+    public string? RelacionConEstudiante { get; set; } = null!;
 
     [JsonIgnore]
     public virtual ICollection<Estudiante> Estudiantes { get; set; } = new List<Estudiante>();

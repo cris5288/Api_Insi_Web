@@ -18,23 +18,23 @@ namespace Api_Insi_Web.Controllers
 
         [HttpGet]
         [Route("Lista")]
-       public IActionResult Lista()
+        public IActionResult Lista()
         {
             List<Matricula> lista = new List<Matricula>();
 
             try
             {
-                lista = _dbcontext.Matriculas.Include(t => t.oTutor).ToList();
-                lista = _dbcontext.Matriculas.Include(e => e.oEstudiante).ToList();
+                int totalMatriculas = _dbcontext.Matriculas.Include(t => t.oTutor).Include(e => e.oEstudiante).Count();
+                lista = _dbcontext.Matriculas.Include(t => t.oTutor).Include(e => e.oEstudiante).ToList();
 
-                return Ok(new { mensaje = "Lista de Matricula de estudiantes", response = lista });
+                return Ok(new { mensaje = "Total de matrículas", total = totalMatriculas, lista = lista });
             }
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message, response = lista });
             }
-
         }
+
 
         [HttpGet]
         [Route("Obtener/{idMatricula:int}")]
@@ -60,33 +60,45 @@ namespace Api_Insi_Web.Controllers
             }
         }
         [HttpGet("porEstado/{estado}")]
-        public ActionResult<List<Matricula>> ObtenerPorEstado(string estado)
+        public ActionResult<List<Matricula>> GetPorEstado(string estado)
         {
-            var matriculas = _dbcontext.Matriculas .Include(e => e.oEstudiante)
-                                                  .Where(m => m.EstadoMatricula == estado)
-                                                  .ToList();
+            var matriculas = _dbcontext.Matriculas
+                .Include(e => e.oEstudiante)
+                .Where(m => m.EstadoMatricula == estado)
+                .ToList();
 
             if (matriculas.Count == 0)
             {
                 return NotFound(new { mensaje = "No se encontraron matrículas con el estado especificado" });
             }
 
-            return Ok(matriculas);
+            var resultado = new
+            {
+                TotalMatriculas = matriculas.Count,
+                matriculas = matriculas
+            };
+
+            return Ok(resultado);
         }
 
-        [HttpGet("porGrado/{gradoSolicitado}")]
-        public ActionResult<List<Matricula>> ObtenerPorGradoSolicitado(string gradoSolicitado)
+         [HttpGet("porGrado/{gradoSolicitado}")]
+        public ActionResult<List<Matricula>> GetPorGradoSolicitado(string gradoSolicitado)
         {
-            var matriculas = _dbcontext.Matriculas.Include(e => e.oEstudiante)
-                                                  .Where(m => m.GradoSolicitado == gradoSolicitado)
-                                                  .ToList();
+            var matriculas = _dbcontext.Matriculas
+                .Include(e => e.oEstudiante)
+                .Where(m => m.GradoSolicitado == gradoSolicitado)
+                .ToList();
 
             if (matriculas.Count == 0)
             {
                 return NotFound(new { mensaje = "No se encontraron matrículas para el grado solicitado especificado" });
             }
-
-            return Ok(matriculas);
+            var resultado = new
+            {
+                TotalMatriculas = matriculas.Count,
+                matriculas = matriculas
+            };
+            return Ok(resultado);
         }
 
 
