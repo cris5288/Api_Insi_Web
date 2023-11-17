@@ -18,16 +18,16 @@ namespace Api_Insi_Web.Controllers
 
         [HttpGet]
         [Route("Lista")]
-        public IActionResult Lista()
+        public ActionResult Lista()
         {
             List<Matricula> lista = new List<Matricula>();
 
             try
             {
-                int totalMatriculas = _dbcontext.Matriculas.Include(t => t.oTutor).Include(e => e.oEstudiante).Count();
+                int total = _dbcontext.Matriculas.Include(t => t.oTutor).Include(e => e.oEstudiante).Count();
                 lista = _dbcontext.Matriculas.Include(t => t.oTutor).Include(e => e.oEstudiante).ToList();
 
-                return Ok(new { mensaje = "Total de matrículas", total = totalMatriculas, lista = lista });
+                return Ok(new { mensaje = "Total de matrículas", TotalMatriculas = total, lista = lista });
             }
             catch (Exception ex)
             {
@@ -38,7 +38,7 @@ namespace Api_Insi_Web.Controllers
 
         [HttpGet]
         [Route("Obtener/{idMatricula:int}")]
-        public IActionResult Obtener(int idMatricula)
+        public ActionResult Obtener(int idMatricula)
         {
             Matricula oMatricula = _dbcontext.Matriculas.Find(idMatricula);
 
@@ -102,35 +102,6 @@ namespace Api_Insi_Web.Controllers
         }
 
 
-        [HttpDelete]
-        [Route("Eliminar/{idMatricula:int}")]
-        public IActionResult Eliminar(int idMatricula)
-        {
-            Matricula oMatricula = _dbcontext.Matriculas.Find(idMatricula);
-            if (oMatricula == null)
-            {
-                return BadRequest("Estudiante no encontrado");
-            }
-
-            try
-            {
-                oMatricula = _dbcontext.Matriculas
-                    .Include(t => t.oTutor)
-                    .Include(e => e.oEstudiante)
-                    .SingleOrDefault(m => m.IdMatricula == idMatricula);
-
-                _dbcontext.RemoveRange(oMatricula.oTutor);
-                _dbcontext.Remove(oMatricula.oEstudiante);
-                _dbcontext.Remove(oMatricula);
-                _dbcontext.SaveChanges();
-
-                return StatusCode(StatusCodes.Status200OK, new { mensaje = "Matricula del Estudiante eliminada correctamente" });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
-            }
-        }
-
+     
     }
 }

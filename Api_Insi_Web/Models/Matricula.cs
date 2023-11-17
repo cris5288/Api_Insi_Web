@@ -6,7 +6,7 @@ namespace Api_Insi_Web.Models;
 
 public partial class Matricula
 {
-    public int? IdMatricula { get; set; }
+    public int IdMatricula { get; set; }
     [JsonIgnore]
     public int? IdEstudiante { get; set; }
     [JsonIgnore]

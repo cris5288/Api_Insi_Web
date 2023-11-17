@@ -8,7 +8,7 @@ public partial class Estudiante
 {
     public int IdEstudiante { get; set; }
     [JsonIgnore]
-    public int? IdTutor { get; set; }
+    public int IdTutor { get; set; }
 
     public string? Nombre { get; set; } = null!;
 

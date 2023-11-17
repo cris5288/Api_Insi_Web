@@ -21,20 +21,37 @@ namespace Api_Insi_Web.Controllers
         [Route("Lista")]
         public ActionResult Lista()
         {
-            List<Tutores> lista = new List<Tutores>();
+            List<TutoresDto> listaTutoresDto = new List<TutoresDto>();
 
             try
             {
-                int totalTutores = _dbcontext.Tutores.Count();
-                lista = _dbcontext.Tutores.ToList();
+                int total = _dbcontext.Tutores.Count();
+                var tutores = _dbcontext.Tutores.ToList();
 
-                return Ok(new { mensaje = "Total de tutores", total = totalTutores, lista = lista });
+                foreach (var tutor in tutores)
+                {
+                    var tutorDto = new TutoresDto
+                    {
+                        IdTutor = tutor.IdTutor,
+                        Nombre = tutor.Nombre,
+                        Apellido = tutor.Apellido,
+                        Direccion = tutor.Direccion,
+                        Telefono = tutor.Telefono,
+                        RelacionConEstudiante = tutor.RelacionConEstudiante,
+                        
+                    };
+
+                    listaTutoresDto.Add(tutorDto);
+                }
+
+                return Ok(new { mensaje = "Lista de tutores", TotalTutores = total, lista = listaTutoresDto });
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message, response = lista });
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message, response = listaTutoresDto });
             }
         }
+
 
 
         [HttpGet]
@@ -57,30 +74,40 @@ namespace Api_Insi_Web.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
             }
         }
+       
         [HttpPost]
         [Route("Guardar")]
-        public ActionResult Guardar([FromBody]Tutores objeto)
+        public ActionResult Guardar([FromBody] TutoresDto objetoDto)
         {
             try
             {
-                if (objeto == null)
+                if (objetoDto == null)
                 {
                     return BadRequest("No se proporcionó ningún dato del tutor.");
                 }
+
+                var objeto = new Tutores
+                {
+                    IdTutor = objetoDto.IdTutor,
+                    Nombre = objetoDto.Nombre,
+                    Apellido = objetoDto.Apellido,
+                    Direccion = objetoDto.Direccion,
+                    Telefono = objetoDto.Telefono,
+                    RelacionConEstudiante = objetoDto.RelacionConEstudiante
+                   
+                };
 
                 _dbcontext.Tutores.Add(objeto);
                 _dbcontext.SaveChanges();
 
                 return CreatedAtAction(nameof(Guardar), new { id = objeto.IdTutor }, new { mensaje = "Tutor guardado correctamente." });
             }
-
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = "Se produjo un error al guardar el tutor." });
             }
         }
-
-
+        
         [HttpPut]
         [Route("Editar")]
         public ActionResult Editar([FromBody] Tutores objeto3)

@@ -2,6 +2,7 @@
   "profiles": {
     "Api_Insi_Web": {
       "commandName": "Project",
+      "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"

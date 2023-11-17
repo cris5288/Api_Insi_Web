@@ -11,56 +11,77 @@ namespace Api_Insi_Web.Controllers
     public class MatriculaController : ControllerBase
     {
 
-            public readonly BdInsiContext _dbcontext;
+        public readonly BdInsiContext _dbcontext;
 
-            public MatriculaController(BdInsiContext _context)
-            {
-                _dbcontext = _context;
-            }
+        public MatriculaController(BdInsiContext _context)
+        {
+            _dbcontext = _context;
+        }
 
         [HttpGet]
         [Route("Lista")]
         public ActionResult Lista()
         {
-            List<Matricula> lista = new List<Matricula>();
+            List<MatriculaDto> listaMatriculaDto = new List<MatriculaDto>();
 
             try
             {
-                int totalMatriculas = _dbcontext.Matriculas.Count();
-                lista = _dbcontext.Matriculas.ToList();
+                int total = _dbcontext.Matriculas.Count();
+                var matriculas = _dbcontext.Matriculas.ToList();
 
-                return Ok(new { mensaje = "Total de matrículas", total = totalMatriculas, lista = lista });
+                foreach (var matricula in matriculas)
+                {
+                    var matriculaDto = new MatriculaDto
+                    {
+                        IdMatricula = matricula.IdMatricula,
+                        IdEstudiante = matricula.IdEstudiante,
+                        IdTutor = matricula.IdTutor,
+                        FechaMatricula = matricula.FechaMatricula,
+                        EstadoMatricula = matricula.EstadoMatricula,
+                        GradoSolicitado = matricula.GradoSolicitado,
+                    };
+
+                    listaMatriculaDto.Add(matriculaDto);
+                }
+
+                return Ok(new { mensaje = "Lista de matrículas", TotalMatriculas = total, lista = listaMatriculaDto });
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message, response = lista });
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message, response = listaMatriculaDto });
             }
         }
 
 
         [HttpGet]
-            [Route("Obtener/{idMatricula:int}")]
-            public ActionResult Obtener(int idMatricula)
+        [Route("Obtener/{idMatricula:int}")]
+        public ActionResult Obtener(int idMatricula)
+        {
+            try
             {
                 Matricula oMatricula = _dbcontext.Matriculas.Find(idMatricula);
 
                 if (oMatricula == null)
                 {
-                    return BadRequest(" Matricula de Estudiante no encontrada");
+                    return NotFound(" Matricula de Estudiante no encontrada");
                 }
+                MatriculaDto matriculaDto = new MatriculaDto
+                {
+                    IdMatricula = oMatricula.IdMatricula,
+                    IdEstudiante = oMatricula.IdEstudiante,
+                    IdTutor = oMatricula.IdTutor,
+                    FechaMatricula = oMatricula.FechaMatricula,
+                    EstadoMatricula = oMatricula.EstadoMatricula,
+                    GradoSolicitado = oMatricula.GradoSolicitado,
+                };
 
-                try
-                {
-                    oMatricula = _dbcontext.Matriculas.Where(m => m.IdMatricula == idMatricula).FirstOrDefault();
-                   
-                    return StatusCode(StatusCodes.Status200OK, new { mensaje = " Matricula de Estudiante encontrada", response = oMatricula });
-                }
-                catch (Exception ex)
-                {
-                    return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
-                }
+                return StatusCode(StatusCodes.Status200OK, new { mensaje = " Matricula de Estudiante encontrada", response = matriculaDto });
             }
-
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
+            }
+        }
 
 
         [HttpPost]
@@ -69,7 +90,7 @@ namespace Api_Insi_Web.Controllers
         {
             try
             {
-                // Lógica para asignar automáticamente un tutor
+                
                 Tutores tutor = _dbcontext.Tutores.OrderByDescending(t => t.IdTutor).FirstOrDefault();
                 objeto.oTutor = tutor;
                 Estudiante estudiante = _dbcontext.Estudiantes.OrderByDescending(e => e.IdEstudiante).FirstOrDefault();
@@ -89,62 +110,32 @@ namespace Api_Insi_Web.Controllers
             }
         }
 
-
-
         [HttpPut]
-            [Route("Editar")]
-            public ActionResult Editar([FromBody] Matricula objeto)
-            {
-                Matricula oMatricula = _dbcontext.Matriculas.Find(objeto.IdMatricula);
-
-                if (oMatricula == null)
-                {
-                    return BadRequest("Matricula de Estudiante no encontrada");
-                }
-                try
-                {
-
-                    oMatricula.IdMatricula = objeto.IdMatricula is null ? oMatricula.IdMatricula : objeto.IdMatricula;
-                    oMatricula.IdEstudiante = objeto.IdEstudiante is null ? oMatricula.IdEstudiante : objeto.IdEstudiante;
-                    oMatricula.IdTutor = objeto.IdTutor is null ? oMatricula.IdTutor : objeto.IdTutor;
-                    oMatricula.FechaMatricula = objeto.FechaMatricula is null ? oMatricula.FechaMatricula : objeto.FechaMatricula;
-                    oMatricula.FechaMatricula = objeto.FechaMatricula is null ? oMatricula.FechaMatricula : objeto.FechaMatricula;
-                    oMatricula.FechaMatricula = objeto.FechaMatricula is null ? oMatricula.FechaMatricula : objeto.FechaMatricula;
-                    oMatricula.EstadoMatricula = objeto.EstadoMatricula is null ? oMatricula.EstadoMatricula : objeto.EstadoMatricula;
-                    oMatricula.GradoSolicitado = objeto.GradoSolicitado is null ? oMatricula.GradoSolicitado : objeto.GradoSolicitado;
-
-                    _dbcontext.Matriculas.Update(oMatricula);
-                    _dbcontext.SaveChanges();
-
-                    return StatusCode(StatusCodes.Status200OK, new { mensaje = "Matricula de Estudiante editada correctamente" });
-                }
-                catch (Exception ex)
-                {
-                    return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
-                }
-            }
-
-        [HttpDelete]
-        [Route("Eliminar/{idMatricula:int}")]
-        public ActionResult Eliminar(int idMatricula)
+        [Route("Editar")]
+        public ActionResult Editar([FromBody] Matricula objeto)
         {
+            Matricula oMatricula = _dbcontext.Matriculas.Find(objeto.IdMatricula);
+
+            if (oMatricula == null)
+            {
+                return BadRequest("Matricula de Estudiante no encontrada");
+            }
             try
             {
-                Matricula oMatricula = _dbcontext.Matriculas
-                    .Include(t => t.oTutor)
-                    .Include(e => e.oEstudiante)
-                    .FirstOrDefault(m => m.IdMatricula == idMatricula);
 
-                if (oMatricula == null)
-                {
-                    return NotFound("Matrícula no encontrada");
-                }
 
-                _dbcontext.RemoveRange(oMatricula.oTutor, oMatricula.oEstudiante);
-                _dbcontext.Remove(oMatricula);
+                oMatricula.IdEstudiante = objeto.IdEstudiante is null ? oMatricula.IdEstudiante : objeto.IdEstudiante;
+                oMatricula.IdTutor = objeto.IdTutor is null ? oMatricula.IdTutor : objeto.IdTutor;
+                oMatricula.FechaMatricula = objeto.FechaMatricula is null ? oMatricula.FechaMatricula : objeto.FechaMatricula;
+                oMatricula.FechaMatricula = objeto.FechaMatricula is null ? oMatricula.FechaMatricula : objeto.FechaMatricula;
+                oMatricula.FechaMatricula = objeto.FechaMatricula is null ? oMatricula.FechaMatricula : objeto.FechaMatricula;
+                oMatricula.EstadoMatricula = objeto.EstadoMatricula is null ? oMatricula.EstadoMatricula : objeto.EstadoMatricula;
+                oMatricula.GradoSolicitado = objeto.GradoSolicitado is null ? oMatricula.GradoSolicitado : objeto.GradoSolicitado;
+
+                _dbcontext.Matriculas.Update(oMatricula);
                 _dbcontext.SaveChanges();
 
-                return StatusCode(StatusCodes.Status200OK, new { mensaje = "Matrícula del estudiante eliminada correctamente" });
+                return StatusCode(StatusCodes.Status200OK, new { mensaje = "Matricula de Estudiante editada correctamente" });
             }
             catch (Exception ex)
             {
@@ -152,7 +143,39 @@ namespace Api_Insi_Web.Controllers
             }
         }
 
-    }
+        [HttpDelete("Eliminar/{idMatricula}")]
+        public IActionResult EliminarMatricula(int idMatricula)
+        {
+            try
+            {
+                var matricula = _dbcontext.Matriculas
+                    .Include(m => m.oEstudiante)
+                    .Include(m => m.oTutor)
+                    .FirstOrDefault(m => m.IdMatricula == idMatricula);
+
+                if (matricula == null)
+                {
+                    return NotFound();
+                }
+
+                _dbcontext.Matriculas.Remove(matricula);
+                _dbcontext.Estudiantes.Remove(matricula.oEstudiante);
+                _dbcontext.Tutores.Remove(matricula.oTutor);
+                _dbcontext.SaveChanges();
+
+                return Ok("La matrícula y los registros relacionados se eliminaron correctamente.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
+            }
+
+
+        }
+
+
+
+    }   
 }
 
 

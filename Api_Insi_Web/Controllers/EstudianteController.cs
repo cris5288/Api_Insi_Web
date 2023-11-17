@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Numerics;
 using System;
+using System.Linq;
+using AutoMapper;
 
 namespace Api_Insi_Web.Controllers
 {
@@ -23,18 +25,41 @@ namespace Api_Insi_Web.Controllers
         [Route("Lista")]
         public ActionResult Lista()
         {
-            List<Estudiante> lista = new List<Estudiante>();
+            List<EstudianteDto> listaEstudiantesDto = new List<EstudianteDto>();
 
             try
             {
-                int totalEstudiantes = _dbcontext.Estudiantes.Count();
-                lista = _dbcontext.Estudiantes.ToList();
+                int total = _dbcontext.Estudiantes.Count();
+                var estudiantes = _dbcontext.Estudiantes.ToList();
 
-                return Ok(new { mensaje = "Total de estudiantes", total = totalEstudiantes, lista = lista });
+                foreach (var estudiante in estudiantes)
+                {
+                    var estudianteDto = new EstudianteDto
+                    {
+                        IdEstudiante = estudiante.IdEstudiante,
+                        IdTutor = estudiante.IdTutor,
+                        Nombre = estudiante.Nombre,
+                        Apellido = estudiante.Apellido,
+                        FechaNacimiento = estudiante.FechaNacimiento,
+                        LugarNacimiento = estudiante.LugarNacimiento,
+                        ZonaRecidencial = estudiante.ZonaRecidencial,
+                        PartidaNacimiento = estudiante.PartidaNacimiento,
+                        Edad = estudiante.Edad,
+                        Genero = estudiante.Genero,
+                        Direccion = estudiante.Direccion,
+                        Telefono = estudiante.Telefono,
+                        UltimoGradoAprobado = estudiante.UltimoGradoAprobado,
+                        EstaRepitiendoGrado = estudiante.EstaRepitiendoGrado
+                    };
+
+                    listaEstudiantesDto.Add(estudianteDto);
+                }
+
+                return Ok(new { mensaje = "Lista de estudiantes", TotalEstudiantes = total, lista = listaEstudiantesDto });
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message, response = lista });
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message, response = listaEstudiantesDto });
             }
         }
 
@@ -48,43 +73,75 @@ namespace Api_Insi_Web.Controllers
 
                 if (oEstudiante == null)
                 {
-                    return BadRequest("Estudiante no encontrado");
+                    return NotFound("Estudiante no encontrado");
                 }
 
-                return StatusCode(StatusCodes.Status200OK, new { mensaje = "Estudiante encontrado", response = oEstudiante });
+                EstudianteDto estudianteDto = new EstudianteDto
+                {
+                    IdEstudiante = oEstudiante.IdEstudiante,
+                    IdTutor = oEstudiante.IdTutor,
+                    Nombre = oEstudiante.Nombre,
+                    Apellido = oEstudiante.Apellido,
+                    FechaNacimiento = oEstudiante.FechaNacimiento,
+                    LugarNacimiento = oEstudiante.LugarNacimiento,
+                    ZonaRecidencial = oEstudiante.ZonaRecidencial,
+                    PartidaNacimiento = oEstudiante.PartidaNacimiento,
+                    Edad = oEstudiante.Edad,
+                    Genero = oEstudiante.Genero,
+                    Direccion = oEstudiante.Direccion,
+                    Telefono = oEstudiante.Telefono,
+                    UltimoGradoAprobado = oEstudiante.UltimoGradoAprobado,
+                    EstaRepitiendoGrado = oEstudiante.EstaRepitiendoGrado,
+                    
+                };
+
+                return Ok(new { mensaje = "Estudiante encontrado", response = estudianteDto });
             }
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
             }
-        }  
-        
-        [HttpPost]
-        [Route("Guardar")]
-        public ActionResult Guardar([FromBody] Estudiante objeto)
-        {
-            try
-            {
-                Tutores tutor = _dbcontext.Tutores.OrderByDescending(t => t.IdTutor).FirstOrDefault();
-                objeto.oTutor = tutor;
-
-                _dbcontext.Estudiantes.Add(objeto);
-                _dbcontext.SaveChanges();
-
-                int idTutorRecienAgregado = objeto.oTutor.IdTutor;
-
-                return Ok(new { mensaje = "Estudiante guardado correctamente" });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = "Ocurrió un error al guardar el estudiante en la base de datos. Por favor, inténtelo nuevamente." });
-            }
         }
 
+      
+        [HttpPost]
+[Route("Guardar")]
+public ActionResult Guardar([FromBody] EstudianteDto objeto)
+{
+    try
+    {
+        Tutores tutor = _dbcontext.Tutores.OrderByDescending(t => t.IdTutor).FirstOrDefault();
+        objeto.oTutor = tutor;
 
+        Estudiante estudiante = new Estudiante
+        {
+            IdEstudiante = objeto.IdEstudiante,
+            IdTutor = objeto.IdTutor,
+            Nombre = objeto.Nombre,
+            Apellido = objeto.Apellido,
+            FechaNacimiento = objeto.FechaNacimiento,
+            LugarNacimiento = objeto.LugarNacimiento,
+            ZonaRecidencial = objeto.ZonaRecidencial,
+            PartidaNacimiento = objeto.PartidaNacimiento,
+            Edad = objeto.Edad,
+            Genero = objeto.Genero,
+            Direccion = objeto.Direccion,
+            Telefono = objeto.Telefono,
+            UltimoGradoAprobado = objeto.UltimoGradoAprobado,
+            EstaRepitiendoGrado = objeto.EstaRepitiendoGrado,
+            oTutor = objeto.oTutor
+        };
 
+        _dbcontext.Estudiantes.Add(estudiante);
+        _dbcontext.SaveChanges();
 
-
+        return Ok(new { mensaje = "Estudiante guardado correctamente" });
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = "Ocurrió un error al guardar el estudiante en la base de datos. Por favor, inténtelo nuevamente." });
+    }
+}
 
         [HttpPut]
             [Route("Editar")]
