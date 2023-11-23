@@ -1,7 +1,10 @@
 ﻿using System;
+using Api_Insi_Web.Models;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
+
+
 
 namespace Api_Insi_Web.Models
 {
@@ -17,6 +20,7 @@ namespace Api_Insi_Web.Models
 
         [Required(ErrorMessage = "El campo Dirección es obligatorio.")]
         public string Direccion { get; set; }
+        [Required(ErrorMessage = "El campo Telefono es obligatorio.")]
 
         [RegularExpression(@"^\d+$", ErrorMessage = "El campo Telefono solo debe contener números.")]
         public string Telefono { get; set; }

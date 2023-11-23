@@ -1,23 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace Api_Insi_Web.Models;
 
 public partial class Tutores
 {
     public int IdTutor { get; set; }
+    [Required(ErrorMessage = "El campo Nombre es obligatorio.")]
+    public string Nombre { get; set; } = null!;
+    [Required(ErrorMessage = "El campo Apellido es obligatorio.")]
+    public string Apellido { get; set; } = null!;
+    [Required(ErrorMessage = "El campo Dirección es obligatorio.")]
+    public string Direccion { get; set; } = null!; 
+    [Required(ErrorMessage = "El campo Telefono es obligatorio.")]
 
-   public string? Nombre { get; set; } = null!;
+    [RegularExpression(@"^\d+$", ErrorMessage = "El campo Telefono solo debe contener números.")]
+    public string Telefono { get; set; } = null!;
+    [Required(ErrorMessage = "El campo RelacionConEstudiante es obligatorio.")]
 
-    public string? Apellido { get; set; } = null!;
-
-    public string? Direccion { get; set; } = null!;
-
-    public string ?Telefono { get; set; } = null!;
-
-    public string? RelacionConEstudiante { get; set; } = null!;
+    public string RelacionConEstudiante { get; set; } = null!;
 
     [JsonIgnore]
     public virtual ICollection<Estudiante> Estudiantes { get; set; } = new List<Estudiante>();

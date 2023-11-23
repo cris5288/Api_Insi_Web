@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Api_Insi_Web.Models;
 using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
+
 
 namespace Api_Insi_Web.Controllers
 {
@@ -107,25 +109,25 @@ namespace Api_Insi_Web.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = "Se produjo un error al guardar el tutor." });
             }
         }
-        
-        [HttpPut]
-        [Route("Editar")]
-        public ActionResult Editar([FromBody] Tutores objeto3)
-        {
 
-            Tutores oTutores = _dbcontext.Tutores.Find(objeto3.IdTutor);
+        [HttpPut]
+        [Route("Editar/{idTutor:int}")]
+        public ActionResult Editar(int idTutor, [FromBody] Tutores objeto3)
+        {
+            Tutores oTutores = _dbcontext.Tutores.Find(idTutor);
 
             if (oTutores == null)
             {
                 return BadRequest("Tutor no encontrado");
             }
+
             try
             {
-                oTutores.Nombre = objeto3.Nombre is null ? oTutores.Nombre : objeto3.Nombre;
-                oTutores.Apellido = objeto3.Apellido is null ? oTutores.Apellido : objeto3.Apellido;
-                oTutores.Direccion = objeto3.Direccion is null ? oTutores.Direccion : objeto3.Direccion;
-                oTutores.Telefono = objeto3.Telefono is null ? oTutores.Telefono : objeto3.Telefono;
-                oTutores.RelacionConEstudiante = objeto3.RelacionConEstudiante is null ? oTutores.RelacionConEstudiante : objeto3.RelacionConEstudiante;
+                oTutores.Nombre = objeto3.Nombre;
+                oTutores.Apellido = objeto3.Apellido;
+                oTutores.Direccion = objeto3.Direccion;
+                oTutores.Telefono = objeto3.Telefono;
+                oTutores.RelacionConEstudiante = objeto3.RelacionConEstudiante;
 
                 _dbcontext.Tutores.Update(oTutores);
                 _dbcontext.SaveChanges();
@@ -134,9 +136,68 @@ namespace Api_Insi_Web.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message});
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
+            }
+        }
+
+
+
+        [HttpPatch("Editar/{idTutor:int}")]
+        public ActionResult ActualizarTutor(int idTutor, [FromBody] JsonPatchDocument<TutoresDto> patchDocument)
+        {
+            // Obtén el tutor de tu almacén de datos o base de datos
+            var oTutor = ObtenerTutorPorId(idTutor);
+
+            if (oTutor == null)
+            {
+                return NotFound();
             }
 
+            // Crea un objeto TutoresDto para aplicar los cambios parciales
+            var tutorDto = new TutoresDto()
+            {
+               
+                Nombre = oTutor.Nombre,
+                Apellido = oTutor.Apellido,
+                Direccion = oTutor.Direccion,
+                Telefono = oTutor.Telefono,
+                RelacionConEstudiante = oTutor.RelacionConEstudiante
+            };
+
+            // Aplica los cambios parciales al tutorDto utilizando el patchDocument
+            patchDocument.ApplyTo(tutorDto, ModelState);
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (!TryValidateModel(tutorDto))
+            {
+                return BadRequest(ModelState);
+            }
+
+            // Aplica los cambios al tutor original
+            oTutor.Nombre = tutorDto.Nombre;
+            oTutor.Apellido = tutorDto.Apellido;
+            oTutor.Direccion = tutorDto.Direccion;
+            oTutor.Telefono = tutorDto.Telefono;
+            oTutor.RelacionConEstudiante = tutorDto.RelacionConEstudiante;
+
+            // Guarda los cambios en tu almacén de datos o base de datos
+
+            _dbcontext.Tutores.Update(oTutor);
+            _dbcontext.SaveChanges();
+
+            return Ok();
+        }
+
+        private Tutores ObtenerTutorPorId(int idTutor)
+        {
+            // Lógica para obtener el tutor desde tu almacén de datos o base de datos
+            var tutor = _dbcontext.Tutores.FirstOrDefault(t => t.IdTutor == idTutor);
+
+            return tutor;
         }
 
         [HttpDelete]

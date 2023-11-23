@@ -1,5 +1,6 @@
 ﻿using Api_Insi_Web.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -83,14 +84,13 @@ namespace Api_Insi_Web.Controllers
             }
         }
 
-
         [HttpPost]
         [Route("Guardar")]
         public ActionResult Guardar([FromBody] Matricula objeto)
         {
             try
             {
-                
+
                 Tutores tutor = _dbcontext.Tutores.OrderByDescending(t => t.IdTutor).FirstOrDefault();
                 objeto.oTutor = tutor;
                 Estudiante estudiante = _dbcontext.Estudiantes.OrderByDescending(e => e.IdEstudiante).FirstOrDefault();
@@ -102,7 +102,7 @@ namespace Api_Insi_Web.Controllers
                 int idTutorRecienAgregado = objeto.oTutor.IdTutor;
                 int idEstudianteRecienAgregado = objeto.oEstudiante.IdEstudiante;
 
-                return Ok(new { mensaje = "Matricula del Estudiante Guardada Correctamente" });
+                return CreatedAtAction(nameof(Guardar), new { id = objeto.IdMatricula }, new { mensaje = "Matricula guardada correctamente." });
             }
             catch (Exception ex)
             {
@@ -110,11 +110,12 @@ namespace Api_Insi_Web.Controllers
             }
         }
 
+
         [HttpPut]
-        [Route("Editar")]
-        public ActionResult Editar([FromBody] Matricula objeto)
+        [Route("Editar/{idMatricula:int}")]
+        public ActionResult Editar(int idMatricula,[FromBody] Matricula objeto)
         {
-            Matricula oMatricula = _dbcontext.Matriculas.Find(objeto.IdMatricula);
+            Matricula oMatricula = _dbcontext.Matriculas.Find(idMatricula);
 
             if (oMatricula == null)
             {
@@ -123,14 +124,9 @@ namespace Api_Insi_Web.Controllers
             try
             {
 
-
-                oMatricula.IdEstudiante = objeto.IdEstudiante is null ? oMatricula.IdEstudiante : objeto.IdEstudiante;
-                oMatricula.IdTutor = objeto.IdTutor is null ? oMatricula.IdTutor : objeto.IdTutor;
-                oMatricula.FechaMatricula = objeto.FechaMatricula is null ? oMatricula.FechaMatricula : objeto.FechaMatricula;
-                oMatricula.FechaMatricula = objeto.FechaMatricula is null ? oMatricula.FechaMatricula : objeto.FechaMatricula;
-                oMatricula.FechaMatricula = objeto.FechaMatricula is null ? oMatricula.FechaMatricula : objeto.FechaMatricula;
-                oMatricula.EstadoMatricula = objeto.EstadoMatricula is null ? oMatricula.EstadoMatricula : objeto.EstadoMatricula;
-                oMatricula.GradoSolicitado = objeto.GradoSolicitado is null ? oMatricula.GradoSolicitado : objeto.GradoSolicitado;
+                oMatricula.FechaMatricula = objeto.FechaMatricula;
+                oMatricula.EstadoMatricula = objeto.EstadoMatricula;
+                oMatricula.GradoSolicitado = objeto.GradoSolicitado;
 
                 _dbcontext.Matriculas.Update(oMatricula);
                 _dbcontext.SaveChanges();
@@ -142,6 +138,62 @@ namespace Api_Insi_Web.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
             }
         }
+
+        [HttpPatch("Editar/{idMatricula:int}")]
+        public ActionResult ActualizarMatricula(int idMatricula, [FromBody] JsonPatchDocument<MatriculaDto> patchDocument)
+        {
+            // Obtén el tutor de tu almacén de datos o base de datos
+            var oMatricula = ObtenerMatriculaPorId(idMatricula);
+
+            if (oMatricula == null)
+            {
+                return NotFound();
+            }
+
+            // Crea un objeto TutoresDto para aplicar los cambios parciales
+            var matriculaDto = new MatriculaDto()
+            {
+                FechaMatricula = oMatricula.FechaMatricula,
+                EstadoMatricula = oMatricula.EstadoMatricula,
+                GradoSolicitado = oMatricula.GradoSolicitado,
+            };
+
+            // Aplica los cambios parciales al tutorDto utilizando el patchDocument
+            patchDocument.ApplyTo(matriculaDto, ModelState);
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (!TryValidateModel(matriculaDto))
+            {
+                return BadRequest(ModelState);
+            }
+
+            // Aplica los cambios al tutor original
+            oMatricula.FechaMatricula = matriculaDto.FechaMatricula;
+            oMatricula.EstadoMatricula = matriculaDto.EstadoMatricula;
+            oMatricula.GradoSolicitado = matriculaDto.GradoSolicitado;
+           
+           
+
+            // Guarda los cambios en tu almacén de datos o base de datos
+
+            _dbcontext.Matriculas.Update(oMatricula);
+            _dbcontext.SaveChanges();
+
+            return Ok();
+        }
+
+        private Matricula ObtenerMatriculaPorId(int idMatricula)
+        {
+            // Lógica para obtener el tutor desde tu almacén de datos o base de datos
+            var matricula = _dbcontext.Matriculas.FirstOrDefault(m => m.IdMatricula == idMatricula);
+
+            return matricula;
+        }
+
 
         [HttpDelete("Eliminar/{idMatricula}")]
         public IActionResult EliminarMatricula(int idMatricula)

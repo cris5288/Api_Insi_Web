@@ -6,6 +6,7 @@ using System.Numerics;
 using System;
 using System.Linq;
 using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 
 namespace Api_Insi_Web.Controllers
 {
@@ -135,8 +136,8 @@ public ActionResult Guardar([FromBody] EstudianteDto objeto)
         _dbcontext.Estudiantes.Add(estudiante);
         _dbcontext.SaveChanges();
 
-        return Ok(new { mensaje = "Estudiante guardado correctamente" });
-    }
+                return CreatedAtAction(nameof(Guardar), new { id = objeto.IdEstudiante }, new { mensaje = "Estudiante guardado correctamente." });
+            }
     catch (Exception ex)
     {
         return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = "Ocurrió un error al guardar el estudiante en la base de datos. Por favor, inténtelo nuevamente." });
@@ -144,11 +145,11 @@ public ActionResult Guardar([FromBody] EstudianteDto objeto)
 }
 
         [HttpPut]
-            [Route("Editar")]
-            public ActionResult Editar([FromBody] Estudiante objeto2)
+            [Route("Editar/{idEstudiante:int}")]
+            public ActionResult Editar(int idEstudiante, [FromBody] Estudiante objeto2)
             {
 
-                Estudiante oEstudiante = _dbcontext.Estudiantes.Find(objeto2.IdEstudiante);
+                Estudiante oEstudiante = _dbcontext.Estudiantes.Find(idEstudiante);
 
                 if (oEstudiante == null)
                 {
@@ -156,19 +157,19 @@ public ActionResult Guardar([FromBody] EstudianteDto objeto)
                 }
                 try
                 {
-                                      
-                    oEstudiante.Nombre = objeto2.Nombre is null ? oEstudiante.Nombre : objeto2.Nombre;
-                    oEstudiante.Apellido = objeto2.Apellido is null ? oEstudiante.Apellido : objeto2.Apellido;
-                    oEstudiante.FechaNacimiento = objeto2.FechaNacimiento is null ? oEstudiante.FechaNacimiento : objeto2.FechaNacimiento;
-                    oEstudiante.LugarNacimiento = objeto2.LugarNacimiento is null ? oEstudiante.LugarNacimiento : objeto2.LugarNacimiento;
-                    oEstudiante.ZonaRecidencial = objeto2.ZonaRecidencial is null ? oEstudiante.ZonaRecidencial : objeto2.ZonaRecidencial;
-                    oEstudiante.PartidaNacimiento = objeto2.PartidaNacimiento is null ? oEstudiante.PartidaNacimiento : objeto2.PartidaNacimiento;
-                    oEstudiante.Edad = objeto2.Edad is null ? oEstudiante.Edad : objeto2.Edad;
-                    oEstudiante.Genero = objeto2.Genero is null ? oEstudiante.Genero : objeto2.Genero;
-                    oEstudiante.Direccion = objeto2.Direccion is null ? oEstudiante.Direccion : objeto2.Direccion;
-                    oEstudiante.Telefono = objeto2.Telefono is null ? oEstudiante.Telefono : objeto2.Telefono;
-                    oEstudiante.UltimoGradoAprobado = objeto2.UltimoGradoAprobado is null ? oEstudiante.UltimoGradoAprobado : objeto2.UltimoGradoAprobado;
-                    oEstudiante.EstaRepitiendoGrado = objeto2.EstaRepitiendoGrado is null ? oEstudiante.EstaRepitiendoGrado : objeto2.EstaRepitiendoGrado;
+
+                    oEstudiante.Nombre = objeto2.Nombre;
+                    oEstudiante.Apellido = objeto2.Apellido;
+                    oEstudiante.FechaNacimiento = objeto2.FechaNacimiento;
+                    oEstudiante.LugarNacimiento = objeto2.LugarNacimiento;
+                    oEstudiante.ZonaRecidencial = objeto2.ZonaRecidencial;
+                    oEstudiante.PartidaNacimiento = objeto2.PartidaNacimiento;
+                    oEstudiante.Edad = objeto2.Edad;
+                    oEstudiante.Genero = objeto2.Genero ;
+                    oEstudiante.Direccion = objeto2.Direccion;
+                    oEstudiante.Telefono = objeto2.Telefono;
+                    oEstudiante.UltimoGradoAprobado = objeto2.UltimoGradoAprobado;
+                    oEstudiante.EstaRepitiendoGrado = objeto2.EstaRepitiendoGrado;
 
                     _dbcontext.Estudiantes.Update(oEstudiante);
                     _dbcontext.SaveChanges();
@@ -182,7 +183,77 @@ public ActionResult Guardar([FromBody] EstudianteDto objeto)
 
             }
 
-            [HttpDelete]
+        [HttpPatch("Editar/{idEstudiante:int}")]
+        public ActionResult ActualizarEstudiante(int idEstudiante, [FromBody] JsonPatchDocument<EstudianteDto> patchDocument)
+        {
+            // Obtén el estudiante de tu almacén de datos o base de datos
+            var oEstudiante = ObtenerEstudiantePorId(idEstudiante);
+
+            if (oEstudiante == null)
+            {
+                return NotFound();
+            }
+
+            // Crea un objeto EstudianteDto y asigna los valores del estudiante original
+            var estudianteDto = new EstudianteDto()
+            {
+                Nombre = oEstudiante.Nombre,
+                Apellido = oEstudiante.Apellido,
+                FechaNacimiento = oEstudiante.FechaNacimiento,
+                LugarNacimiento = oEstudiante.LugarNacimiento,
+                ZonaRecidencial = oEstudiante.ZonaRecidencial,
+                PartidaNacimiento = oEstudiante.PartidaNacimiento,
+                Edad = oEstudiante.Edad,
+                Genero = oEstudiante.Genero,
+                Direccion = oEstudiante.Direccion,
+                Telefono = oEstudiante.Telefono,
+                UltimoGradoAprobado = oEstudiante.UltimoGradoAprobado,
+                EstaRepitiendoGrado = oEstudiante.EstaRepitiendoGrado,
+            };
+
+            // Aplica los cambios parciales al estudianteDto utilizando el patchDocument
+            patchDocument.ApplyTo(estudianteDto, ModelState);
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (!TryValidateModel(estudianteDto))
+            {
+                return BadRequest(ModelState);
+            }
+
+            // Aplica los cambios al estudiante original
+            oEstudiante.Nombre = estudianteDto.Nombre;
+            oEstudiante.Apellido = estudianteDto.Apellido;
+            oEstudiante.FechaNacimiento = estudianteDto.FechaNacimiento;
+            oEstudiante.LugarNacimiento = estudianteDto.LugarNacimiento;
+            oEstudiante.ZonaRecidencial = estudianteDto.ZonaRecidencial;
+            oEstudiante.PartidaNacimiento = estudianteDto.PartidaNacimiento;
+            oEstudiante.Edad = estudianteDto.Edad;
+            oEstudiante.Genero = estudianteDto.Genero;
+            oEstudiante.Direccion = estudianteDto.Direccion;
+            oEstudiante.Telefono = estudianteDto.Telefono;
+            oEstudiante.UltimoGradoAprobado = estudianteDto.UltimoGradoAprobado;
+            oEstudiante.EstaRepitiendoGrado = estudianteDto.EstaRepitiendoGrado;
+
+            // Guarda los cambios en tu almacén de datos o base de datos
+            _dbcontext.Estudiantes.Update(oEstudiante);
+            _dbcontext.SaveChanges();
+
+            return Ok();
+
+        }
+        private Estudiante ObtenerEstudiantePorId(int idEstudiante)
+        {
+            // Lógica para obtener el tutor desde tu almacén de datos o base de datos
+            var estudiante = _dbcontext.Estudiantes.FirstOrDefault(e => e.IdEstudiante == idEstudiante);
+
+            return estudiante;
+        }
+
+        [HttpDelete]
             [Route("Eliminar/{idEstudiante:int}")]
             public ActionResult Eliminar(int idEstudiante)
             {
