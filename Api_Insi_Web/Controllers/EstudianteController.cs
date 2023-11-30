@@ -55,12 +55,13 @@ namespace Api_Insi_Web.Controllers
 
                     listaEstudiantesDto.Add(estudianteDto);
                 }
+                string mensaje = total == 0 ? "No se encontraron estudiantes" : total == 1 ? "Se encontró 1 estudiante" : $"Se encontraron {total} estudiantes";
 
-                return Ok(new { mensaje = "Lista de estudiantes", TotalEstudiantes = total, lista = listaEstudiantesDto });
+                return Ok(new { mensaje, estudiantes = listaEstudiantesDto });
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message, response = listaEstudiantesDto });
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
             }
         }
 
@@ -96,7 +97,53 @@ namespace Api_Insi_Web.Controllers
                     
                 };
 
-                return Ok(new { mensaje = "Estudiante encontrado", response = estudianteDto });
+                return Ok(new { mensaje = "Estudiante encontrado", Estudiante = estudianteDto });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
+            }
+        }
+        [HttpGet]
+        [Route("buscarEstudiantePorNombre/{nombre}")]
+        public ActionResult getBuscarEstudiantePorNombre(string nombre)
+        {
+            try
+            {
+               
+                List<Estudiante> estudiante = _dbcontext.Estudiantes.Where(t => t.Nombre.ToLower().Contains(nombre.ToLower())).ToList();
+
+                if (estudiante.Count == 0)
+                {
+                    return NotFound("Estudiante no encontrado");
+                }
+
+                List<EstudianteDto> estudianteDto = new List<EstudianteDto>();
+                foreach (Estudiante oEstudiante in estudiante)
+                {
+                    EstudianteDto estudianteDto1 = new EstudianteDto
+                    {
+                        IdEstudiante = oEstudiante.IdEstudiante,
+                        IdTutor = oEstudiante.IdTutor,
+                        Nombre = oEstudiante.Nombre,
+                        Apellido = oEstudiante.Apellido,
+                        FechaNacimiento = oEstudiante.FechaNacimiento,
+                        LugarNacimiento = oEstudiante.LugarNacimiento,
+                        ZonaRecidencial = oEstudiante.ZonaRecidencial,
+                        PartidaNacimiento = oEstudiante.PartidaNacimiento,
+                        Edad = oEstudiante.Edad,
+                        Genero = oEstudiante.Genero,
+                        Direccion = oEstudiante.Direccion,
+                        Telefono = oEstudiante.Telefono,
+                        UltimoGradoAprobado = oEstudiante.UltimoGradoAprobado,
+                        EstaRepitiendoGrado = oEstudiante.EstaRepitiendoGrado,
+
+                    };
+
+                    estudianteDto.Add(estudianteDto1);
+                }
+
+                return Ok(new { mensaje = $"Se encontraron {estudiante.Count} estudiantes con el nombre '{nombre}'", Estudiantes = estudianteDto });
             }
             catch (Exception ex)
             {
@@ -104,97 +151,140 @@ namespace Api_Insi_Web.Controllers
             }
         }
 
-      
-        [HttpPost]
-[Route("Guardar")]
-public ActionResult Guardar([FromBody] EstudianteDto objeto)
-{
-    try
-    {
-        Tutores tutor = _dbcontext.Tutores.OrderByDescending(t => t.IdTutor).FirstOrDefault();
-        objeto.oTutor = tutor;
-
-        Estudiante estudiante = new Estudiante
+        [HttpGet]
+        [Route("buscarEstudiantePorApellido/{apellido}")]
+        public ActionResult getBuscarEstudiantePorApellido(string apellido)
         {
-            IdEstudiante = objeto.IdEstudiante,
-            IdTutor = objeto.IdTutor,
-            Nombre = objeto.Nombre,
-            Apellido = objeto.Apellido,
-            FechaNacimiento = objeto.FechaNacimiento,
-            LugarNacimiento = objeto.LugarNacimiento,
-            ZonaRecidencial = objeto.ZonaRecidencial,
-            PartidaNacimiento = objeto.PartidaNacimiento,
-            Edad = objeto.Edad,
-            Genero = objeto.Genero,
-            Direccion = objeto.Direccion,
-            Telefono = objeto.Telefono,
-            UltimoGradoAprobado = objeto.UltimoGradoAprobado,
-            EstaRepitiendoGrado = objeto.EstaRepitiendoGrado,
-            oTutor = objeto.oTutor
-        };
+            try
+            {
+               
+                List<Estudiante> estudiante = _dbcontext.Estudiantes.Where(t => t.Apellido.ToLower().Contains(apellido.ToLower())).ToList();
 
-        _dbcontext.Estudiantes.Add(estudiante);
-        _dbcontext.SaveChanges();
+                if (estudiante.Count == 0)
+                {
+                    return NotFound("Estudiante no encontrado");
+                }
+
+                List<EstudianteDto> estudianteDto = new List<EstudianteDto>();
+                foreach (Estudiante oEstudiante in estudiante)
+                {
+                    EstudianteDto estudianteDto1 = new EstudianteDto
+                    {
+                        IdEstudiante = oEstudiante.IdEstudiante,
+                        IdTutor = oEstudiante.IdTutor,
+                        Nombre = oEstudiante.Nombre,
+                        Apellido = oEstudiante.Apellido,
+                        FechaNacimiento = oEstudiante.FechaNacimiento,
+                        LugarNacimiento = oEstudiante.LugarNacimiento,
+                        ZonaRecidencial = oEstudiante.ZonaRecidencial,
+                        PartidaNacimiento = oEstudiante.PartidaNacimiento,
+                        Edad = oEstudiante.Edad,
+                        Genero = oEstudiante.Genero,
+                        Direccion = oEstudiante.Direccion,
+                        Telefono = oEstudiante.Telefono,
+                        UltimoGradoAprobado = oEstudiante.UltimoGradoAprobado,
+                        EstaRepitiendoGrado = oEstudiante.EstaRepitiendoGrado,
+
+                    };
+
+                    estudianteDto.Add(estudianteDto1);
+                }
+                return Ok(new { mensaje = $"Se encontraron {estudiante.Count} estudiantes con el apellido '{apellido}'", Estudiantes = estudianteDto });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
+            }
+        }
+
+
+        [HttpPost]
+        [Route("Guardar")]
+        public ActionResult Guardar([FromBody] EstudianteDto objeto)
+        {
+            try
+            {
+                Tutores tutor = _dbcontext.Tutores.OrderByDescending(t => t.IdTutor).FirstOrDefault();
+                objeto.oTutor = tutor;
+
+                Estudiante estudiante = new Estudiante
+                {
+                    IdEstudiante = objeto.IdEstudiante,
+                    IdTutor = objeto.IdTutor,
+                    Nombre = objeto.Nombre,
+                    Apellido = objeto.Apellido,
+                    FechaNacimiento = objeto.FechaNacimiento,
+                    LugarNacimiento = objeto.LugarNacimiento,
+                    ZonaRecidencial = objeto.ZonaRecidencial,
+                    PartidaNacimiento = objeto.PartidaNacimiento,
+                    Edad = objeto.Edad,
+                    Genero = objeto.Genero,
+                    Direccion = objeto.Direccion,
+                    Telefono = objeto.Telefono,
+                    UltimoGradoAprobado = objeto.UltimoGradoAprobado,
+                    EstaRepitiendoGrado = objeto.EstaRepitiendoGrado,
+                    oTutor = objeto.oTutor
+                };
+
+                _dbcontext.Estudiantes.Add(estudiante);
+                _dbcontext.SaveChanges();
 
                 return CreatedAtAction(nameof(Guardar), new { id = objeto.IdEstudiante }, new { mensaje = "Estudiante guardado correctamente." });
             }
-    catch (Exception ex)
-    {
-        return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = "Ocurrió un error al guardar el estudiante en la base de datos. Por favor, inténtelo nuevamente." });
-    }
-}
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje =ex.Message });
+            }
+        }
 
         [HttpPut]
-            [Route("Editar/{idEstudiante:int}")]
-            public ActionResult Editar(int idEstudiante, [FromBody] Estudiante objeto2)
+        [Route("Editar/{idEstudiante:int}")]
+        public ActionResult Editar(int idEstudiante, [FromBody] Estudiante objeto2)
+        {
+
+            Estudiante oEstudiante = _dbcontext.Estudiantes.Find(idEstudiante);
+
+            if (oEstudiante == null)
+            {
+                return NotFound("Estudiante no encontrado");
+            }
+            try
             {
 
-                Estudiante oEstudiante = _dbcontext.Estudiantes.Find(idEstudiante);
+                oEstudiante.Nombre = objeto2.Nombre;
+                oEstudiante.Apellido = objeto2.Apellido;
+                oEstudiante.FechaNacimiento = objeto2.FechaNacimiento;
+                oEstudiante.LugarNacimiento = objeto2.LugarNacimiento;
+                oEstudiante.ZonaRecidencial = objeto2.ZonaRecidencial;
+                oEstudiante.PartidaNacimiento = objeto2.PartidaNacimiento;
+                oEstudiante.Edad = objeto2.Edad;
+                oEstudiante.Genero = objeto2.Genero;
+                oEstudiante.Direccion = objeto2.Direccion;
+                oEstudiante.Telefono = objeto2.Telefono;
+                oEstudiante.UltimoGradoAprobado = objeto2.UltimoGradoAprobado;
+                oEstudiante.EstaRepitiendoGrado = objeto2.EstaRepitiendoGrado;
 
-                if (oEstudiante == null)
-                {
-                    return BadRequest("Estudiante no encontrado");
-                }
-                try
-                {
+                _dbcontext.Estudiantes.Update(oEstudiante);
+                _dbcontext.SaveChanges();
 
-                    oEstudiante.Nombre = objeto2.Nombre;
-                    oEstudiante.Apellido = objeto2.Apellido;
-                    oEstudiante.FechaNacimiento = objeto2.FechaNacimiento;
-                    oEstudiante.LugarNacimiento = objeto2.LugarNacimiento;
-                    oEstudiante.ZonaRecidencial = objeto2.ZonaRecidencial;
-                    oEstudiante.PartidaNacimiento = objeto2.PartidaNacimiento;
-                    oEstudiante.Edad = objeto2.Edad;
-                    oEstudiante.Genero = objeto2.Genero ;
-                    oEstudiante.Direccion = objeto2.Direccion;
-                    oEstudiante.Telefono = objeto2.Telefono;
-                    oEstudiante.UltimoGradoAprobado = objeto2.UltimoGradoAprobado;
-                    oEstudiante.EstaRepitiendoGrado = objeto2.EstaRepitiendoGrado;
-
-                    _dbcontext.Estudiantes.Update(oEstudiante);
-                    _dbcontext.SaveChanges();
-
-                    return StatusCode(StatusCodes.Status200OK, new { mensaje = "Datos de Estudiante editados correctamente" });
-                }
-                catch (Exception ex)
-                {
-                    return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
-                }
-
+                return Ok( "Datos de Estudiante editados correctamente" );
             }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
+            }
+
+        }
 
         [HttpPatch("Editar/{idEstudiante:int}")]
         public ActionResult ActualizarEstudiante(int idEstudiante, [FromBody] JsonPatchDocument<EstudianteDto> patchDocument)
-        {
-            // Obtén el estudiante de tu almacén de datos o base de datos
+        {          
             var oEstudiante = ObtenerEstudiantePorId(idEstudiante);
 
             if (oEstudiante == null)
             {
                 return NotFound();
-            }
-
-            // Crea un objeto EstudianteDto y asigna los valores del estudiante original
+            }           
             var estudianteDto = new EstudianteDto()
             {
                 Nombre = oEstudiante.Nombre,
@@ -210,8 +300,7 @@ public ActionResult Guardar([FromBody] EstudianteDto objeto)
                 UltimoGradoAprobado = oEstudiante.UltimoGradoAprobado,
                 EstaRepitiendoGrado = oEstudiante.EstaRepitiendoGrado,
             };
-
-            // Aplica los cambios parciales al estudianteDto utilizando el patchDocument
+           
             patchDocument.ApplyTo(estudianteDto, ModelState);
 
             if (!ModelState.IsValid)
@@ -223,8 +312,7 @@ public ActionResult Guardar([FromBody] EstudianteDto objeto)
             {
                 return BadRequest(ModelState);
             }
-
-            // Aplica los cambios al estudiante original
+           
             oEstudiante.Nombre = estudianteDto.Nombre;
             oEstudiante.Apellido = estudianteDto.Apellido;
             oEstudiante.FechaNacimiento = estudianteDto.FechaNacimiento;
@@ -237,17 +325,15 @@ public ActionResult Guardar([FromBody] EstudianteDto objeto)
             oEstudiante.Telefono = estudianteDto.Telefono;
             oEstudiante.UltimoGradoAprobado = estudianteDto.UltimoGradoAprobado;
             oEstudiante.EstaRepitiendoGrado = estudianteDto.EstaRepitiendoGrado;
-
-            // Guarda los cambios en tu almacén de datos o base de datos
+           
             _dbcontext.Estudiantes.Update(oEstudiante);
             _dbcontext.SaveChanges();
 
-            return Ok();
+            return Ok( "Datos de Estudiante editados correctamente");
 
         }
         private Estudiante ObtenerEstudiantePorId(int idEstudiante)
-        {
-            // Lógica para obtener el tutor desde tu almacén de datos o base de datos
+        {            
             var estudiante = _dbcontext.Estudiantes.FirstOrDefault(e => e.IdEstudiante == idEstudiante);
 
             return estudiante;
@@ -260,7 +346,7 @@ public ActionResult Guardar([FromBody] EstudianteDto objeto)
                 Estudiante oEstudiante = _dbcontext.Estudiantes.Find(idEstudiante);
                 if (oEstudiante == null)
                 {
-                    return BadRequest("Estudiante no encontrado");
+                    return NotFound("Estudiante no encontrado");
                 }
 
                 try
@@ -268,7 +354,7 @@ public ActionResult Guardar([FromBody] EstudianteDto objeto)
                     _dbcontext.Estudiantes.Remove(oEstudiante);
                     _dbcontext.SaveChanges();
 
-                    return StatusCode(StatusCodes.Status200OK, new { mensaje = "Estudiante eliminado correctamente" });
+                    return Ok( "Estudiante eliminado correctamente" );
                 }
                 catch (Exception ex)
                 {

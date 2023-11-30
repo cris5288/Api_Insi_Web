@@ -2,6 +2,9 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
+
 
 namespace Api_Insi_Web.Controllers
 {
@@ -27,11 +30,14 @@ namespace Api_Insi_Web.Controllers
                 int total = _dbcontext.Matriculas.Include(t => t.oTutor).Include(e => e.oEstudiante).Count();
                 lista = _dbcontext.Matriculas.Include(t => t.oTutor).Include(e => e.oEstudiante).ToList();
 
-                return Ok(new { mensaje = "Total de matrículas", TotalMatriculas = total, lista = lista });
+                string mensaje = total == 0 ? "No se encontraron matriculas" : total == 1 ? "Se encontró 1 matricula" : $"Se encontraron {total} matriculas";
+
+                return Ok(new { mensaje, Matriculas = lista });
+               
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message, response = lista });
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
             }
         }
 
@@ -44,7 +50,7 @@ namespace Api_Insi_Web.Controllers
 
             if (oMatricula == null)
             {
-                return BadRequest(" Matricula de Estudiante no encontrada");
+                return NotFound(" Matricula de Estudiante no encontrada");
             }
 
             try
@@ -64,8 +70,8 @@ namespace Api_Insi_Web.Controllers
         {
             var matriculas = _dbcontext.Matriculas
                 .Include(e => e.oEstudiante)
-                .Where(m => m.EstadoMatricula == estado)
-                .ToList();
+                .Include(t => t.oTutor)
+                .Where(m => m.EstadoMatricula.ToLower().Contains(estado.ToLower())).ToList();
 
             if (matriculas.Count == 0)
             {
@@ -74,20 +80,21 @@ namespace Api_Insi_Web.Controllers
 
             var resultado = new
             {
-                TotalMatriculas = matriculas.Count,
+               
                 matriculas = matriculas
             };
+            return Ok(new { mensaje = $"Se encontraron {matriculas.Count} matriculas con el estado '{estado}'", resultado });
 
-            return Ok(resultado);
+           
         }
 
-         [HttpGet("porGrado/{gradoSolicitado}")]
+         [HttpGet("porGradoSolicitado/{gradoSolicitado}")]
         public ActionResult<List<Matricula>> GetPorGradoSolicitado(string gradoSolicitado)
         {
             var matriculas = _dbcontext.Matriculas
                 .Include(e => e.oEstudiante)
-                .Where(m => m.GradoSolicitado == gradoSolicitado)
-                .ToList();
+                .Include(t => t.oTutor)
+                .Where(m => m.GradoSolicitado.ToLower().Contains(gradoSolicitado.ToLower())).ToList();
 
             if (matriculas.Count == 0)
             {
@@ -95,13 +102,15 @@ namespace Api_Insi_Web.Controllers
             }
             var resultado = new
             {
-                TotalMatriculas = matriculas.Count,
+                
                 matriculas = matriculas
             };
-            return Ok(resultado);
+            return Ok(new { mensaje = $"Se encontraron {matriculas.Count} matriculas con el grado solicitado '{gradoSolicitado}'", resultado });
+
+            
         }
 
+       
 
-     
     }
 }

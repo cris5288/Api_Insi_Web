@@ -44,12 +44,14 @@ namespace Api_Insi_Web.Controllers
 
                     listaMatriculaDto.Add(matriculaDto);
                 }
+                string mensaje = total == 0 ? "No se encontraron matriculas" : total == 1 ? "Se encontró 1 matricula" : $"Se encontraron {total} matriculas";
 
-                return Ok(new { mensaje = "Lista de matrículas", TotalMatriculas = total, lista = listaMatriculaDto });
+                return Ok(new { mensaje, Matriculas = listaMatriculaDto });
+                
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message, response = listaMatriculaDto });
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
             }
         }
 
@@ -66,6 +68,7 @@ namespace Api_Insi_Web.Controllers
                 {
                     return NotFound(" Matricula de Estudiante no encontrada");
                 }
+
                 MatriculaDto matriculaDto = new MatriculaDto
                 {
                     IdMatricula = oMatricula.IdMatricula,
@@ -76,7 +79,81 @@ namespace Api_Insi_Web.Controllers
                     GradoSolicitado = oMatricula.GradoSolicitado,
                 };
 
-                return StatusCode(StatusCodes.Status200OK, new { mensaje = " Matricula de Estudiante encontrada", response = matriculaDto });
+                return Ok( new { mensaje = " Matricula de Estudiante encontrada", Matricula = matriculaDto });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
+            }
+        }
+        
+        [HttpGet]
+        [Route("porEstado/{EstadoMatricula}")]
+        public ActionResult GetPorEstado(string EstadoMatricula)
+        {
+            try
+            {
+                List<Matricula> matriculas = _dbcontext.Matriculas.Where(m => m.EstadoMatricula.ToLower().Contains(EstadoMatricula.ToLower())).ToList();
+
+
+                if (matriculas.Count == 0)
+                {
+                    return NotFound("Matricula de Estudiante no encontrada");
+                }
+
+                List<MatriculaDto> matriculasDto = new List<MatriculaDto>();
+                foreach (Matricula oMatricula in matriculas)
+                {
+                    MatriculaDto matriculaDto = new MatriculaDto
+                    {
+                        IdMatricula = oMatricula.IdMatricula,
+                        IdEstudiante = oMatricula.IdEstudiante,
+                        IdTutor = oMatricula.IdTutor,
+                        FechaMatricula = oMatricula.FechaMatricula,
+                        EstadoMatricula = oMatricula.EstadoMatricula,
+                        GradoSolicitado = oMatricula.GradoSolicitado,
+                    };
+
+                    matriculasDto.Add(matriculaDto);
+                }
+                return Ok(new { mensaje = $"Se encontraron {matriculas.Count} matriculas con el estado '{EstadoMatricula}'", Matriculas = matriculasDto });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
+            }
+        }
+        
+        [HttpGet]
+        [Route("porGradoSolicitado/{gradoSolicitado}")]
+        public ActionResult GetPorGradoSolicitado(string gradoSolicitado)
+        {
+            try
+            {
+               
+                List<Matricula> matriculas = _dbcontext.Matriculas.Where(m => m.GradoSolicitado.ToLower().Contains(gradoSolicitado.ToLower())).ToList();
+
+                if (matriculas.Count == 0)
+                {
+                    return NotFound("Matricula de Estudiante no encontrada");
+                }
+
+                List<MatriculaDto> matriculasDto = new List<MatriculaDto>();
+                foreach (Matricula oMatricula in matriculas)
+                {
+                    MatriculaDto matriculaDto = new MatriculaDto
+                    {
+                        IdMatricula = oMatricula.IdMatricula,
+                        IdEstudiante = oMatricula.IdEstudiante,
+                        IdTutor = oMatricula.IdTutor,
+                        FechaMatricula = oMatricula.FechaMatricula,
+                        EstadoMatricula = oMatricula.EstadoMatricula,
+                        GradoSolicitado = oMatricula.GradoSolicitado,
+                    };
+
+                    matriculasDto.Add(matriculaDto);
+                }
+                return Ok(new { mensaje = $"Se encontraron {matriculas.Count} matriculas con el grado solicitado '{gradoSolicitado}'", Matriculas = matriculasDto });
             }
             catch (Exception ex)
             {
@@ -84,7 +161,10 @@ namespace Api_Insi_Web.Controllers
             }
         }
 
-        [HttpPost]
+      
+
+
+    [HttpPost]
         [Route("Guardar")]
         public ActionResult Guardar([FromBody] Matricula objeto)
         {
@@ -119,7 +199,7 @@ namespace Api_Insi_Web.Controllers
 
             if (oMatricula == null)
             {
-                return BadRequest("Matricula de Estudiante no encontrada");
+                return NotFound("Matricula de Estudiante no encontrada");
             }
             try
             {
@@ -131,7 +211,7 @@ namespace Api_Insi_Web.Controllers
                 _dbcontext.Matriculas.Update(oMatricula);
                 _dbcontext.SaveChanges();
 
-                return StatusCode(StatusCodes.Status200OK, new { mensaje = "Matricula de Estudiante editada correctamente" });
+                return Ok( "Matricula de Estudiante editada correctamente");
             }
             catch (Exception ex)
             {
@@ -142,7 +222,6 @@ namespace Api_Insi_Web.Controllers
         [HttpPatch("Editar/{idMatricula:int}")]
         public ActionResult ActualizarMatricula(int idMatricula, [FromBody] JsonPatchDocument<MatriculaDto> patchDocument)
         {
-            // Obtén el tutor de tu almacén de datos o base de datos
             var oMatricula = ObtenerMatriculaPorId(idMatricula);
 
             if (oMatricula == null)
@@ -150,7 +229,6 @@ namespace Api_Insi_Web.Controllers
                 return NotFound();
             }
 
-            // Crea un objeto TutoresDto para aplicar los cambios parciales
             var matriculaDto = new MatriculaDto()
             {
                 FechaMatricula = oMatricula.FechaMatricula,
@@ -158,7 +236,6 @@ namespace Api_Insi_Web.Controllers
                 GradoSolicitado = oMatricula.GradoSolicitado,
             };
 
-            // Aplica los cambios parciales al tutorDto utilizando el patchDocument
             patchDocument.ApplyTo(matriculaDto, ModelState);
 
             if (!ModelState.IsValid)
@@ -171,24 +248,19 @@ namespace Api_Insi_Web.Controllers
                 return BadRequest(ModelState);
             }
 
-            // Aplica los cambios al tutor original
             oMatricula.FechaMatricula = matriculaDto.FechaMatricula;
             oMatricula.EstadoMatricula = matriculaDto.EstadoMatricula;
             oMatricula.GradoSolicitado = matriculaDto.GradoSolicitado;
-           
-           
-
-            // Guarda los cambios en tu almacén de datos o base de datos
+          
 
             _dbcontext.Matriculas.Update(oMatricula);
             _dbcontext.SaveChanges();
 
-            return Ok();
+            return Ok("Matricula de Estudiante editada correctamente");
         }
 
         private Matricula ObtenerMatriculaPorId(int idMatricula)
         {
-            // Lógica para obtener el tutor desde tu almacén de datos o base de datos
             var matricula = _dbcontext.Matriculas.FirstOrDefault(m => m.IdMatricula == idMatricula);
 
             return matricula;

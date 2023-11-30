@@ -28,7 +28,8 @@ public partial class EstudianteDto
     public string Genero { get; set; } = null!;
     [Required(ErrorMessage = "El campo Direccion es obligatorio.")]
     public string Direccion { get; set; } = null!;
-    [RegularExpression(@"^\d+$", ErrorMessage = "El campo Telefono solo debe contener números.")]
+    [Required(ErrorMessage = "El campo Telefono es obligatorio.")]
+    [RegularExpression(@"^\d{8}$", ErrorMessage = "El campo Telefono debe contener exactamente 8 números.")]
     public string Telefono { get; set; } = null!;
     [Required(ErrorMessage = "El campo UltimoGradoAprobado es obligatorio.")]
     public string UltimoGradoAprobado { get; set; } = null!;

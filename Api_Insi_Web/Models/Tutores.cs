@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
+using System.Linq;
 
 namespace Api_Insi_Web.Models;
 
@@ -16,7 +17,7 @@ public partial class Tutores
     public string Direccion { get; set; } = null!; 
     [Required(ErrorMessage = "El campo Telefono es obligatorio.")]
 
-    [RegularExpression(@"^\d+$", ErrorMessage = "El campo Telefono solo debe contener números.")]
+    [RegularExpression(@"^\d{8}$", ErrorMessage = "El campo Telefono debe contener exactamente 8 números.")]
     public string Telefono { get; set; } = null!;
     [Required(ErrorMessage = "El campo RelacionConEstudiante es obligatorio.")]
 

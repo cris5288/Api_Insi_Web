@@ -45,16 +45,16 @@ namespace Api_Insi_Web.Controllers
 
                     listaTutoresDto.Add(tutorDto);
                 }
+                string mensaje = total == 0 ? "No se encontraron tutores" : total == 1 ? "Se encontró 1 tutor" : $"Se encontraron {total} tutores";
 
-                return Ok(new { mensaje = "Lista de tutores", TotalTutores = total, lista = listaTutoresDto });
+                return Ok(new { mensaje,  Tutores = listaTutoresDto });
             }
+           
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message, response = listaTutoresDto });
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
             }
         }
-
-
 
         [HttpGet]
         [Route("Obtener/{idTutores:int}")]
@@ -66,29 +66,102 @@ namespace Api_Insi_Web.Controllers
 
                 if (oTutores == null)
                 {
-                    return BadRequest("Tutor no encontrado");
+                    return NotFound("Tutor no encontrado");
                 }
 
-                return StatusCode(StatusCodes.Status200OK, new { mensaje = "Tutor encontrado", response = oTutores });
+                return Ok( new { mensaje = "Tutor encontrado", Tutor = oTutores });
             }
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
             }
         }
-       
+
+        [HttpGet]
+        [Route("buscarTutorPorNombre/{nombre}")]
+        public ActionResult getBuscarTutorPorNombre(string nombre)
+        {
+            try
+            {
+                // Realizar la búsqueda en la base de datos por el nombre del tutor
+                List<Tutores> tutores = _dbcontext.Tutores.Where(t => t.Nombre.ToLower().Contains(nombre.ToLower())).ToList();
+
+                if (tutores.Count == 0)
+                {
+                    return NotFound("Tutor no encontrado");
+                }
+
+                List<TutoresDto> tutoresDto = new List<TutoresDto>();
+                foreach (Tutores tutor in tutores)
+                {
+                    TutoresDto tutorDto = new TutoresDto
+                    {
+                        IdTutor = tutor.IdTutor,
+                        Nombre = tutor.Nombre,
+                        Apellido = tutor.Apellido,
+                        Direccion = tutor.Direccion,
+                        Telefono = tutor.Telefono,
+                        RelacionConEstudiante = tutor.RelacionConEstudiante
+                    };
+
+                    tutoresDto.Add(tutorDto);
+                }
+
+                return Ok(new { mensaje = $"Se encontraron {tutores.Count} tutores con el nombre '{nombre}'", Tutores = tutoresDto });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        [Route("buscarTutorPorApellido/{apellido}")]
+        public ActionResult getBuscarTutorPorApellido(string apellido)
+        {
+            try
+            {
+               
+                List<Tutores> tutores = _dbcontext.Tutores.Where(t => t.Apellido.ToLower().Contains(apellido.ToLower())).ToList();
+
+                if (tutores.Count == 0)
+                {
+                    return NotFound("Tutor no encontrado");
+                }
+
+                List<TutoresDto> tutoresDto = new List<TutoresDto>();
+                foreach (Tutores tutor in tutores)
+                {
+                    TutoresDto tutorDto = new TutoresDto
+                    {
+                        IdTutor = tutor.IdTutor,
+                        Nombre = tutor.Nombre,
+                        Apellido = tutor.Apellido,
+                        Direccion = tutor.Direccion,
+                        Telefono = tutor.Telefono,
+                        RelacionConEstudiante = tutor.RelacionConEstudiante
+                    };
+
+                    tutoresDto.Add(tutorDto);
+                }
+                return Ok(new { mensaje = $"Se encontraron {tutores.Count} tutores con el apellido '{apellido}'", Tutores = tutoresDto });
+
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
+            }
+        }
+
+
         [HttpPost]
         [Route("Guardar")]
         public ActionResult Guardar([FromBody] TutoresDto objetoDto)
         {
             try
             {
-                if (objetoDto == null)
-                {
-                    return BadRequest("No se proporcionó ningún dato del tutor.");
-                }
 
-                var objeto = new Tutores
+                Tutores objeto = new Tutores
                 {
                     IdTutor = objetoDto.IdTutor,
                     Nombre = objetoDto.Nombre,
@@ -106,7 +179,7 @@ namespace Api_Insi_Web.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = "Se produjo un error al guardar el tutor." });
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = ex.Message });
             }
         }
 
@@ -118,7 +191,7 @@ namespace Api_Insi_Web.Controllers
 
             if (oTutores == null)
             {
-                return BadRequest("Tutor no encontrado");
+                return NotFound("Tutor no encontrado");
             }
 
             try
@@ -132,7 +205,7 @@ namespace Api_Insi_Web.Controllers
                 _dbcontext.Tutores.Update(oTutores);
                 _dbcontext.SaveChanges();
 
-                return StatusCode(StatusCodes.Status200OK, new { mensaje = "Datos de Tutor editados correctamente" });
+                return Ok( new { mensaje = "Datos de Tutor editados correctamente" });
             }
             catch (Exception ex)
             {
@@ -145,7 +218,6 @@ namespace Api_Insi_Web.Controllers
         [HttpPatch("Editar/{idTutor:int}")]
         public ActionResult ActualizarTutor(int idTutor, [FromBody] JsonPatchDocument<TutoresDto> patchDocument)
         {
-            // Obtén el tutor de tu almacén de datos o base de datos
             var oTutor = ObtenerTutorPorId(idTutor);
 
             if (oTutor == null)
@@ -153,10 +225,9 @@ namespace Api_Insi_Web.Controllers
                 return NotFound();
             }
 
-            // Crea un objeto TutoresDto para aplicar los cambios parciales
             var tutorDto = new TutoresDto()
             {
-               
+
                 Nombre = oTutor.Nombre,
                 Apellido = oTutor.Apellido,
                 Direccion = oTutor.Direccion,
@@ -164,7 +235,7 @@ namespace Api_Insi_Web.Controllers
                 RelacionConEstudiante = oTutor.RelacionConEstudiante
             };
 
-            // Aplica los cambios parciales al tutorDto utilizando el patchDocument
+
             patchDocument.ApplyTo(tutorDto, ModelState);
 
             if (!ModelState.IsValid)
@@ -177,24 +248,20 @@ namespace Api_Insi_Web.Controllers
                 return BadRequest(ModelState);
             }
 
-            // Aplica los cambios al tutor original
             oTutor.Nombre = tutorDto.Nombre;
             oTutor.Apellido = tutorDto.Apellido;
             oTutor.Direccion = tutorDto.Direccion;
             oTutor.Telefono = tutorDto.Telefono;
             oTutor.RelacionConEstudiante = tutorDto.RelacionConEstudiante;
 
-            // Guarda los cambios en tu almacén de datos o base de datos
-
             _dbcontext.Tutores.Update(oTutor);
             _dbcontext.SaveChanges();
 
-            return Ok();
+            return Ok("Datos de Tutor editados correctamente");
         }
 
         private Tutores ObtenerTutorPorId(int idTutor)
         {
-            // Lógica para obtener el tutor desde tu almacén de datos o base de datos
             var tutor = _dbcontext.Tutores.FirstOrDefault(t => t.IdTutor == idTutor);
 
             return tutor;
@@ -207,7 +274,7 @@ namespace Api_Insi_Web.Controllers
             Tutores oTutores = _dbcontext.Tutores.Find(idTutores);
             if (oTutores == null)
             {
-                return BadRequest("Tutor no encontrado");
+                return NotFound("Tutor no encontrado");
             }
 
             try
@@ -215,7 +282,7 @@ namespace Api_Insi_Web.Controllers
                 _dbcontext.Tutores.Remove(oTutores);
                 _dbcontext.SaveChanges();
 
-                return StatusCode(StatusCodes.Status200OK, new { mensaje = "Tutor eliminado correctamente" });
+                return Ok( new { mensaje = "Tutor eliminado correctamente" });
             }
             catch (Exception ex)
             {

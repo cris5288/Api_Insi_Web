@@ -7,11 +7,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+//builder.Services.AddControllers(options =>
+//{
+//    options.ReturnHttpNotAcceptable = true;
+//}).AddNewtonsoftJson()
+//.AddXmlDataContractSerializerFormatters();//ESTE ME DARA ERROR EN SWAGGER CUANDO INTENTE TRAER MATRICULAS POR ESTADO Y POR GRADO SOLICITADO
 builder.Services.AddControllers(options =>
 {
-    options.ReturnHttpNotAcceptable = true;
-}).AddNewtonsoftJson()
-.AddXmlDataContractSerializerFormatters();//ESTE ME DARA ERROR EN SWAGGER CUANDO INTENTE TRAER MATRICULAS POR ESTADO Y POR GRADO SOLICITADO
+    //options.ReturnHttpNotAcceptable = true;
+}).AddNewtonsoftJson();
+//.AddXmlSerializerFormatters();
+//builder.Services.AddMvc().AddXmlSerializerFormatters();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

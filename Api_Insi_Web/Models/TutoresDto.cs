@@ -21,8 +21,7 @@ namespace Api_Insi_Web.Models
         [Required(ErrorMessage = "El campo Dirección es obligatorio.")]
         public string Direccion { get; set; }
         [Required(ErrorMessage = "El campo Telefono es obligatorio.")]
-
-        [RegularExpression(@"^\d+$", ErrorMessage = "El campo Telefono solo debe contener números.")]
+        [RegularExpression(@"^\d{8}$", ErrorMessage = "El campo Telefono debe contener exactamente 8 números.")]
         public string Telefono { get; set; }
 
         [Required(ErrorMessage = "El campo RelacionConEstudiante es obligatorio.")]
